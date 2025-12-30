@@ -1,0 +1,32 @@
+{
+	"folders": [
+		{
+			"path": "../../../../../projects/alma-consulting"
+		},
+		{
+			"path": "../.."
+		}
+	],
+  "settings": {
+    "sqltools.connections": [
+      {
+        "connectionTimeout": 15,
+        "mssqlOptions": {
+          "appName": "SQLTools",
+          "useUTC": true,
+          "encrypt": false,
+          "trustServerCertificate": true
+        },
+        "ssh": "Disabled",
+        "previewLimit": 50,
+        "server": "172.18.15.20",
+        "port": 1433,
+        "driver": "MSSQL",
+        "name": "scale-qa",
+        "database": "ILS",
+        "username": "nz_one",
+        "password": "Nazan_one"
+      }
+    ]
+  }
+}
