@@ -42,13 +42,11 @@ export const config = {
     level: process.env.LOG_LEVEL || 'info',
   },
 
-  // Automation tool Alma credentials
-  automation: {
-    webhookUrl: process.env.AUTO_WEBHOOK_URL || 'https://auto.digital.almafconsultora.com',
-    webhookEnv: process.env.AUTO_WEBHOOK_ENV || 'webhook/test',
-    webhookPath: process.env.AUTO_WEBHOOK_PATH || '',
-    user: process.env.AUTO_USER || 'alma',
-    password: process.env.AUTO_PASSWORD || '',
+  // Alma Mailbox Reader service
+  mailboxReader: {
+    baseUrl: process.env.MAILBOX_READER_URL || 'http://localhost:3000',
+    user: process.env.MAILBOX_READER_USER || 'admin',
+    password: process.env.MAILBOX_READER_PASSWORD || 'admin',
   },
 
   // Email configuration

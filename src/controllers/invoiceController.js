@@ -266,10 +266,10 @@ class InvoiceController {
         });
       }
 
-      if (!consecutive || typeof consecutive !== 'string') {
+      if (consecutive !== undefined && typeof consecutive !== 'number') {
         return res.status(400).json({
           success: false,
-          message: 'consecutive string is required',
+          message: 'consecutive must be a number',
         });
       }
 
