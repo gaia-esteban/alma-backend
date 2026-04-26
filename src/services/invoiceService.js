@@ -1,7 +1,6 @@
 import invoiceRepository from '../repositories/invoiceRepository.js';
 import userRepository from '../repositories/userRepository.js';
 import logger from '../utils/logger.js';
-import webhookHelper from './helpers/webhookHelper.js';
 
 /**
  * Invoice Service - Business Logic Layer
@@ -348,7 +347,7 @@ class InvoiceService {
    */
   async exportInvoices(invoices, consecutive) {
     try {
-      // Call n8n webhook to process the export
+      const { default: webhookHelper } = await import('./helpers/webhookHelper.js');
       const webhookResponse = await webhookHelper.callExportWebhook(invoices, consecutive);
 
       // Log the export operation
