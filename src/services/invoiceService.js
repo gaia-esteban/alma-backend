@@ -347,15 +347,19 @@ class InvoiceService {
    */
   async exportInvoices(invoices, consecutive) {
     try {
-      const { default: webhookHelper } = await import('./helpers/webhookHelper.js');
-      const webhookResponse = await webhookHelper.callExportWebhook(invoices, consecutive);
+      const { default: mailboxReaderHelper } = await import(
+        './helpers/mailboxReaderHelper.js'
+      );
+      const response = await mailboxReaderHelper.callContaiExport(
+        invoices,
+        consecutive
+      );
 
-      // Log the export operation
       logger.info(
         `Exported ${invoices.length} invoices with consecutive ${consecutive}`
       );
 
-      return webhookResponse;
+      return response;
     } catch (error) {
       logger.error({ err: error }, 'Error exporting invoices');
       throw error;
