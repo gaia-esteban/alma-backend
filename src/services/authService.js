@@ -5,6 +5,7 @@ import { config } from '../config/env.js';
 import userRepository from '../repositories/userRepository.js';
 import logger from '../utils/logger.js';
 import emailService from './emailService.js';
+import eventLogService, { ENTITY, EVENT_NAME, OUTCOME } from './eventLogService.js';
 
 /**
  * Authentication Service
@@ -81,6 +82,8 @@ class AuthService {
       const user = await userRepository.findByEmail(email);
 
       if (!user) {
+        eventLogService.create({ entity: ENTITY.APP, eventName: EVENT_NAME.LOGGED_IN, outcome: OUTCOME.FAILED, userEmail: email })
+          .catch(err => logger.error({ err }, 'Failed to log failed login attempt'));
         throw new Error('Invalid credentials');
       }
 
@@ -92,11 +95,16 @@ class AuthService {
       });
 
       if (!isValid) {
+        eventLogService.create({ entity: ENTITY.APP, eventName: EVENT_NAME.LOGGED_IN, outcome: OUTCOME.FAILED, userId: user.id, userEmail: user.email })
+          .catch(err => logger.error({ err }, 'Failed to log failed login attempt'));
         throw new Error('Invalid OTP code');
       }
 
       // Generate token
       const token = this.generateToken(user);
+
+      eventLogService.create({ entity: ENTITY.APP, eventName: EVENT_NAME.LOGGED_IN, outcome: OUTCOME.SUCCESS, userId: user.id, userEmail: user.email })
+        .catch(err => logger.error({ err }, 'Failed to log successful login'));
 
       logger.info(`User logged in: ${user.username}`);
 

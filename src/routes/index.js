@@ -2,7 +2,9 @@ import express from 'express';
 import authController from '../controllers/authController.js';
 import userController from '../controllers/userController.js';
 import invoiceController from '../controllers/invoiceController.js';
-import { authenticate, requireAdmin } from '../middlewares/auth.js';
+import supplierController from '../controllers/supplierController.js';
+import eventLogController from '../controllers/eventLogController.js';
+import { authenticate, requireAdmin, requireApiKey } from '../middlewares/auth.js';
 
 const router = express.Router();
 
@@ -44,6 +46,25 @@ router.get('/incoming-orders', authenticate, invoiceController.getAllInvoices.bi
 router.get('/incoming-orders/:id', authenticate, invoiceController.getInvoiceById.bind(invoiceController));
 // POST operations
 router.post('/incoming-orders/export', authenticate, invoiceController.exportInvoices.bind(invoiceController));
+// PATCH operations
+router.patch('/incoming-orders/:id/status', authenticate, invoiceController.updateInvoiceStatus.bind(invoiceController));
+
+/**
+ * Supplier Routes
+ * @prefix /api/suppliers
+ */
+router.get('/suppliers', authenticate, supplierController.getAllSuppliers.bind(supplierController));
+router.get('/suppliers/:id', authenticate, supplierController.getSupplierById.bind(supplierController));
+router.post('/suppliers', authenticate, supplierController.createSupplier.bind(supplierController));
+router.patch('/suppliers/:id', authenticate, supplierController.updateSupplier.bind(supplierController));
+
+/**
+ * Event Log Routes
+ * @prefix /api/events-log
+ */
+router.get('/events-log', authenticate, eventLogController.getAll.bind(eventLogController));
+router.get('/events-log/:id', authenticate, eventLogController.getById.bind(eventLogController));
+router.post('/events-log', requireApiKey, eventLogController.create.bind(eventLogController));
 
 /**
  * 404 Handler for API routes

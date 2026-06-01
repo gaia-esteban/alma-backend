@@ -119,6 +119,177 @@ See `.env` file for all configuration options. Key variables:
 - `PUT /api/invoices/:id` - Update invoice
 - `DELETE /api/invoices/:id` - Delete invoice
 
+### Suppliers
+
+All supplier endpoints require a Bearer token: `Authorization: Bearer <token>`
+
+---
+
+#### `GET /api/suppliers`
+List suppliers with optional filters.
+
+**Query params:**
+| Param | Type | Required | Description |
+|---|---|---|---|
+| `company_id` | number | No | Filter by company |
+| `is_active` | boolean | No | Filter by active status |
+| `identification` | string | No | Filter by exact identification value |
+| `page` | number | No | Page number (default: 1) |
+| `limit` | number | No | Results per page (default: 10) |
+
+**Response:**
+```json
+{
+  "data": [ { ...supplier } ],
+  "total": 42
+}
+```
+
+---
+
+#### `GET /api/suppliers/:id`
+Get a single supplier by ID.
+
+**Path params:**
+| Param | Type | Description |
+|---|---|---|
+| `id` | number | Supplier ID |
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Supplier retrieved successfully",
+  "data": { "supplier": { ...supplier } }
+}
+```
+
+---
+
+#### `POST /api/suppliers`
+Create a new supplier.
+
+**Body (JSON):**
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `company_id` | number | Yes | Company the supplier belongs to |
+| `identification` | string | Yes | Supplier identifier (max 100 chars). Must be unique per company |
+| `description` | string | No | Free-text description (max 250 chars) |
+| `debit_account` | string | No | Debit account code (max 50 chars) |
+| `credit_account` | string | No | Credit account code (max 50 chars) |
+| `tax_vat_account` | string | No | VAT account code (max 50 chars) |
+| `withholdings_account` | string | No | Withholdings account code (max 255 chars) |
+| `withholding_account` | string | No | Withholding account code (max 50 chars) |
+| `withholdings_threshold` | number | No | Withholding threshold amount |
+| `withholdings_percentage` | number | No | Withholding percentage |
+| `is_active` | boolean | No | Active status (default: true) |
+
+**Response:** `201 Created`
+```json
+{
+  "success": true,
+  "message": "Supplier created successfully",
+  "data": { "supplier": { ...supplier } }
+}
+```
+
+---
+
+#### `PATCH /api/suppliers/:id`
+Partially update an existing supplier. Only include the fields to change.
+
+**Path params:**
+| Param | Type | Description |
+|---|---|---|
+| `id` | number | Supplier ID |
+
+**Body (JSON):** Any subset of the fields listed in `POST /api/suppliers`.
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Supplier updated successfully",
+  "data": { "supplier": { ...supplier } }
+}
+```
+
+### Event Log
+
+All event log endpoints require a Bearer token: `Authorization: Bearer <token>`
+
+---
+
+#### `GET /api/events-log`
+List event log entries with optional filters.
+
+**Query params:**
+| Param | Type | Required | Description |
+|---|---|---|---|
+| `entity` | string | No | Filter by entity. Values: `INCOMING_ORDER`, `APP`, `SUPPLIER` |
+| `eventName` | string | No | Filter by event. Values: `LOGGED_IN`, `ACCOUNTING_FILE_CREATED`, `SUPPLIER_UPDATED` |
+| `userId` | number | No | Filter by user ID |
+| `userEmail` | string | No | Filter by user email (exact match) |
+| `startDate` | ISO 8601 string | No | Filter records created on or after this date |
+| `endDate` | ISO 8601 string | No | Filter records created on or before this date |
+| `page` | number | No | Page number (default: 1) |
+| `limit` | number | No | Results per page (default: 10) |
+| `orderBy` | string | No | Sort order: `ASC` or `DESC` (default: `DESC`) |
+
+**Response:**
+```json
+{
+  "data": [ { ...eventLog } ],
+  "total": 42
+}
+```
+
+---
+
+#### `GET /api/events-log/:id`
+Get a single event log entry by ID.
+
+**Path params:**
+| Param | Type | Description |
+|---|---|---|
+| `id` | number | Event log ID |
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Event log retrieved successfully",
+  "data": { "eventLog": { ...eventLog } }
+}
+```
+
+---
+
+#### `POST /api/events-log`
+Create a new event log entry manually.
+
+**Auth:** API key via header `x-api-key: <EVENTS_LOG_API_KEY>`
+
+**Body (JSON):**
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `entity` | string | Yes | Values: `INCOMING_ORDER`, `APP`, `SUPPLIER` |
+| `eventName` | string | Yes | Values: `LOGGED_IN`, `ACCOUNTING_FILE_CREATED`, `SUPPLIER_UPDATED` |
+| `outcome` | string | No | Values: `FAILED`, `SUCCESS` |
+| `userId` | number | No | ID of the user associated with the event |
+| `userEmail` | string | No | Email of the user associated with the event |
+
+**Response:** `201 Created`
+```json
+{
+  "success": true,
+  "message": "Event log created successfully",
+  "data": { "eventLog": { ...eventLog } }
+}
+```
+
+---
+
 ## Database Models
 
 ### User
