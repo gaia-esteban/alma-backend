@@ -10,6 +10,7 @@ import './models/User.js';
 import './models/IncomingInvoice.js';
 import './models/IncomingInvoiceDetails.js';
 import './models/Supplier.js';
+import './models/EventLog.js';
 
 /**
  * Initialize Express Application

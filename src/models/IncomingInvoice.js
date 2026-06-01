@@ -107,6 +107,12 @@ IncomingInvoice.init(
       allowNull: true,
       field: 'total_value',
     },
+    status: {
+      type: DataTypes.ENUM('Pendiente', 'Procesada', 'Fallida'),
+      allowNull: false,
+      defaultValue: 'Pendiente',
+      field: 'status',
+    },
     createdAt: {
       type: DataTypes.DATE,
       allowNull: true,

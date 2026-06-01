@@ -49,6 +49,11 @@ export const config = {
     password: process.env.MAILBOX_READER_PASSWORD || 'admin',
   },
 
+  // API Keys
+  apiKeys: {
+    eventsLog: process.env.EVENTS_LOG_API_KEY || '',
+  },
+
   // Email configuration
   email: {
     user: process.env.EMAIL_USER || '',

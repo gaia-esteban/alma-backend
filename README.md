@@ -214,6 +214,82 @@ Partially update an existing supplier. Only include the fields to change.
 }
 ```
 
+### Event Log
+
+All event log endpoints require a Bearer token: `Authorization: Bearer <token>`
+
+---
+
+#### `GET /api/events-log`
+List event log entries with optional filters.
+
+**Query params:**
+| Param | Type | Required | Description |
+|---|---|---|---|
+| `entity` | string | No | Filter by entity. Values: `INCOMING_ORDER`, `APP`, `SUPPLIER` |
+| `eventName` | string | No | Filter by event. Values: `LOGGED_IN`, `ACCOUNTING_FILE_CREATED`, `SUPPLIER_UPDATED` |
+| `userId` | number | No | Filter by user ID |
+| `userEmail` | string | No | Filter by user email (exact match) |
+| `startDate` | ISO 8601 string | No | Filter records created on or after this date |
+| `endDate` | ISO 8601 string | No | Filter records created on or before this date |
+| `page` | number | No | Page number (default: 1) |
+| `limit` | number | No | Results per page (default: 10) |
+| `orderBy` | string | No | Sort order: `ASC` or `DESC` (default: `DESC`) |
+
+**Response:**
+```json
+{
+  "data": [ { ...eventLog } ],
+  "total": 42
+}
+```
+
+---
+
+#### `GET /api/events-log/:id`
+Get a single event log entry by ID.
+
+**Path params:**
+| Param | Type | Description |
+|---|---|---|
+| `id` | number | Event log ID |
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Event log retrieved successfully",
+  "data": { "eventLog": { ...eventLog } }
+}
+```
+
+---
+
+#### `POST /api/events-log`
+Create a new event log entry manually.
+
+**Auth:** API key via header `x-api-key: <EVENTS_LOG_API_KEY>`
+
+**Body (JSON):**
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `entity` | string | Yes | Values: `INCOMING_ORDER`, `APP`, `SUPPLIER` |
+| `eventName` | string | Yes | Values: `LOGGED_IN`, `ACCOUNTING_FILE_CREATED`, `SUPPLIER_UPDATED` |
+| `outcome` | string | No | Values: `FAILED`, `SUCCESS` |
+| `userId` | number | No | ID of the user associated with the event |
+| `userEmail` | string | No | Email of the user associated with the event |
+
+**Response:** `201 Created`
+```json
+{
+  "success": true,
+  "message": "Event log created successfully",
+  "data": { "eventLog": { ...eventLog } }
+}
+```
+
+---
+
 ## Database Models
 
 ### User

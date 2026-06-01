@@ -159,9 +159,27 @@ export async function optionalAuthenticate(req, res, next) {
   }
 }
 
+/**
+ * API Key Middleware
+ * Validates x-api-key header against EVENTS_LOG_API_KEY env variable
+ */
+export function requireApiKey(req, res, next) {
+  const apiKey = req.headers['x-api-key'];
+
+  if (!apiKey || apiKey !== config.apiKeys.eventsLog) {
+    return res.status(401).json({
+      success: false,
+      message: 'Invalid or missing API key',
+    });
+  }
+
+  next();
+}
+
 export default {
   authenticate,
   requireAdmin,
   requireOwnerOrAdmin,
   optionalAuthenticate,
+  requireApiKey,
 };

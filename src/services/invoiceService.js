@@ -62,7 +62,7 @@ class InvoiceService {
    */
   async getAllInvoices(filters = {}, currentUser) {
     try {
-      const { page = 1, limit = 10, orderBy = 'DESC' } = filters;
+      const { page = 1, limit = 10, orderBy = 'DESC', status } = filters;
       const offset = (page - 1) * limit;
 
       // Validate orderBy parameter
@@ -71,14 +71,18 @@ class InvoiceService {
         ? orderBy.toUpperCase()
         : 'DESC';
 
+      const where = {};
+      if (status) where.status = status;
+
       const options = {
+        where,
         limit: parseInt(limit),
         offset: parseInt(offset),
         orderBy: sortOrder,
       };
 
       const invoices = await invoiceRepository.findAll(options);
-      const total = await invoiceRepository.count();
+      const total = await invoiceRepository.count(where);
 
       logger.info(`Retrieved ${invoices.length} invoices for user ${currentUser.username}`);
 
@@ -259,9 +263,9 @@ class InvoiceService {
       }
 
       // Validate status transition
-      const validStatuses = ['draft', 'pending', 'paid', 'cancelled'];
+      const validStatuses = ['Pendiente', 'Procesada', 'Fallida'];
       if (!validStatuses.includes(status)) {
-        throw new Error('Invalid invoice status');
+        throw new Error(`Invalid status. Must be one of: ${validStatuses.join(', ')}`);
       }
 
       const updatedInvoice = await invoiceRepository.update(id, { status });
