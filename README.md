@@ -119,6 +119,101 @@ See `.env` file for all configuration options. Key variables:
 - `PUT /api/invoices/:id` - Update invoice
 - `DELETE /api/invoices/:id` - Delete invoice
 
+### Suppliers
+
+All supplier endpoints require a Bearer token: `Authorization: Bearer <token>`
+
+---
+
+#### `GET /api/suppliers`
+List suppliers with optional filters.
+
+**Query params:**
+| Param | Type | Required | Description |
+|---|---|---|---|
+| `company_id` | number | No | Filter by company |
+| `is_active` | boolean | No | Filter by active status |
+| `identification` | string | No | Filter by exact identification value |
+| `page` | number | No | Page number (default: 1) |
+| `limit` | number | No | Results per page (default: 10) |
+
+**Response:**
+```json
+{
+  "data": [ { ...supplier } ],
+  "total": 42
+}
+```
+
+---
+
+#### `GET /api/suppliers/:id`
+Get a single supplier by ID.
+
+**Path params:**
+| Param | Type | Description |
+|---|---|---|
+| `id` | number | Supplier ID |
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Supplier retrieved successfully",
+  "data": { "supplier": { ...supplier } }
+}
+```
+
+---
+
+#### `POST /api/suppliers`
+Create a new supplier.
+
+**Body (JSON):**
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `company_id` | number | Yes | Company the supplier belongs to |
+| `identification` | string | Yes | Supplier identifier (max 100 chars). Must be unique per company |
+| `description` | string | No | Free-text description (max 250 chars) |
+| `debit_account` | string | No | Debit account code (max 50 chars) |
+| `credit_account` | string | No | Credit account code (max 50 chars) |
+| `tax_vat_account` | string | No | VAT account code (max 50 chars) |
+| `withholdings_account` | string | No | Withholdings account code (max 255 chars) |
+| `withholding_account` | string | No | Withholding account code (max 50 chars) |
+| `withholdings_threshold` | number | No | Withholding threshold amount |
+| `withholdings_percentage` | number | No | Withholding percentage |
+| `is_active` | boolean | No | Active status (default: true) |
+
+**Response:** `201 Created`
+```json
+{
+  "success": true,
+  "message": "Supplier created successfully",
+  "data": { "supplier": { ...supplier } }
+}
+```
+
+---
+
+#### `PATCH /api/suppliers/:id`
+Partially update an existing supplier. Only include the fields to change.
+
+**Path params:**
+| Param | Type | Description |
+|---|---|---|
+| `id` | number | Supplier ID |
+
+**Body (JSON):** Any subset of the fields listed in `POST /api/suppliers`.
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Supplier updated successfully",
+  "data": { "supplier": { ...supplier } }
+}
+```
+
 ## Database Models
 
 ### User

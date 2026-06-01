@@ -2,6 +2,7 @@ import express from 'express';
 import authController from '../controllers/authController.js';
 import userController from '../controllers/userController.js';
 import invoiceController from '../controllers/invoiceController.js';
+import supplierController from '../controllers/supplierController.js';
 import { authenticate, requireAdmin } from '../middlewares/auth.js';
 
 const router = express.Router();
@@ -44,6 +45,15 @@ router.get('/incoming-orders', authenticate, invoiceController.getAllInvoices.bi
 router.get('/incoming-orders/:id', authenticate, invoiceController.getInvoiceById.bind(invoiceController));
 // POST operations
 router.post('/incoming-orders/export', authenticate, invoiceController.exportInvoices.bind(invoiceController));
+
+/**
+ * Supplier Routes
+ * @prefix /api/suppliers
+ */
+router.get('/suppliers', authenticate, supplierController.getAllSuppliers.bind(supplierController));
+router.get('/suppliers/:id', authenticate, supplierController.getSupplierById.bind(supplierController));
+router.post('/suppliers', authenticate, supplierController.createSupplier.bind(supplierController));
+router.patch('/suppliers/:id', authenticate, supplierController.updateSupplier.bind(supplierController));
 
 /**
  * 404 Handler for API routes
