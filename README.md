@@ -6,10 +6,9 @@ A modern Node.js backend built with Express, Sequelize ORM, JWT authentication, 
 
 - **ES6 Modules**: Modern JavaScript with import/export syntax
 - **Express.js**: Fast, unopinionated web framework
-- **Sequelize ORM**: Database management with MySQL
+- **Sequelize ORM**: Database management with PostgreSQL
 - **JWT Authentication**: Secure token-based authentication
-- **TOTP (Time-based One-Time Password)**: Two-factor authentication using otplib
-- **Winston Logger**: Professional logging system
+- **Pino Logger**: High-performance structured logging
 - **CORS**: Cross-Origin Resource Sharing support
 - **Layered Architecture**: Controllers, Services, Repositories pattern
 
@@ -19,40 +18,53 @@ A modern Node.js backend built with Express, Sequelize ORM, JWT authentication, 
 backend-nodejs-alma/
 ├── src/
 │   ├── config/
-│   │   ├── env.js           # Environment configuration loader
-│   │   └── database.js      # Sequelize setup and connection
+│   │   ├── env.js                     # Environment configuration loader
+│   │   └── database.js                # Sequelize setup and connection
 │   ├── utils/
-│   │   └── logger.js        # Winston logger configuration
+│   │   └── logger.js                  # Pino logger configuration
 │   ├── models/
-│   │   ├── User.js          # User model
-│   │   ├── Invoice.js       # Invoice model
-│   │   └── InvoiceDetail.js # InvoiceDetail model with associations
+│   │   ├── User.js                    # User model
+│   │   ├── IncomingInvoice.js         # Incoming invoice model
+│   │   ├── IncomingInvoiceDetails.js  # Invoice line items model
+│   │   ├── Supplier.js                # Supplier model
+│   │   └── EventLog.js                # Audit event log model
 │   ├── repositories/
-│   │   ├── userRepository.js    # User data access layer
-│   │   └── invoiceRepository.js # Invoice data access layer
+│   │   ├── userRepository.js          # User data access layer
+│   │   ├── invoiceRepository.js       # Invoice data access layer
+│   │   ├── supplierRepository.js      # Supplier data access layer
+│   │   └── eventLogRepository.js      # Event log data access layer
 │   ├── services/
-│   │   ├── authService.js    # Authentication service (JWT, TOTP)
-│   │   ├── userService.js    # User business logic
-│   │   └── invoiceService.js # Invoice business logic
+│   │   ├── authService.js             # Authentication service (JWT)
+│   │   ├── userService.js             # User business logic
+│   │   ├── invoiceService.js          # Invoice business logic
+│   │   ├── supplierService.js         # Supplier business logic
+│   │   ├── eventLogService.js         # Event log business logic
+│   │   ├── emailService.js            # Email sending service
+│   │   └── emailTemplates.js          # Email template helpers
 │   ├── controllers/
-│   │   ├── authController.js    # Authentication endpoints
-│   │   ├── userController.js    # User CRUD endpoints
-│   │   └── invoiceController.js # Invoice endpoints
+│   │   ├── authController.js          # Authentication endpoints
+│   │   ├── userController.js          # User CRUD endpoints
+│   │   ├── invoiceController.js       # Incoming order endpoints
+│   │   ├── supplierController.js      # Supplier endpoints
+│   │   └── eventLogController.js      # Event log endpoints
 │   ├── middlewares/
-│   │   ├── auth.js          # JWT authentication & authorization
-│   │   └── cors.js          # CORS configuration
+│   │   ├── auth.js                    # JWT authentication & authorization
+│   │   └── cors.js                    # CORS configuration
 │   ├── routes/
-│   │   └── index.js         # API routes configuration
-│   └── index.js             # Application entry point
-├── .env                     # Environment variables
-├── package.json             # Project dependencies
-└── README.md               # This file
+│   │   └── index.js                   # API routes configuration
+│   └── index.js                       # Application entry point
+├── scripts/
+│   ├── create_events_log.sql          # Initial events_log table migration
+│   └── alter_events_log_add_outcome.sql # Add outcome column migration
+├── .env                               # Environment variables
+├── package.json                       # Project dependencies
+└── README.md                          # This file
 ```
 
 ## Prerequisites
 
 - Node.js 18+ (with ES modules support)
-- MySQL 8.0+
+- PostgreSQL 14+
 - npm or yarn
 
 ## Installation
@@ -73,9 +85,14 @@ backend-nodejs-alma/
    - Generate a secure JWT secret
    - Configure CORS origins
 
-4. Create the database:
+4. Create the database and run migrations:
    ```sql
-   CREATE DATABASE alma_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+   CREATE DATABASE alma_db;
+   ```
+   Then run the migration scripts in order:
+   ```bash
+   psql -d alma_db -f scripts/create_events_log.sql
+   psql -d alma_db -f scripts/alter_events_log_add_outcome.sql
    ```
 
 5. Run the application:
@@ -102,22 +119,19 @@ See `.env` file for all configuration options. Key variables:
 ### Authentication
 - `POST /api/auth/register` - Register new user
 - `POST /api/auth/login` - Login and get JWT token
-- `POST /api/auth/verify-totp` - Verify TOTP code
-- `POST /api/auth/enable-2fa` - Enable two-factor authentication
-- `POST /api/auth/disable-2fa` - Disable two-factor authentication
 
 ### Users
 - `GET /api/users` - Get all users (admin only)
 - `GET /api/users/:id` - Get user by ID
+- `POST /api/users` - Create user (admin only)
 - `PUT /api/users/:id` - Update user
 - `DELETE /api/users/:id` - Delete user (admin only)
 
-### Invoices
-- `POST /api/invoices` - Create invoice
-- `GET /api/invoices` - Get all invoices
-- `GET /api/invoices/:id` - Get invoice by ID
-- `PUT /api/invoices/:id` - Update invoice
-- `DELETE /api/invoices/:id` - Delete invoice
+### Incoming Orders
+- `GET /api/incoming-orders` - Get all incoming orders
+- `GET /api/incoming-orders/:id` - Get incoming order by ID
+- `POST /api/incoming-orders/export` - Export incoming orders
+- `PATCH /api/incoming-orders/:id/status` - Update order status
 
 ### Suppliers
 
@@ -216,7 +230,8 @@ Partially update an existing supplier. Only include the fields to change.
 
 ### Event Log
 
-All event log endpoints require a Bearer token: `Authorization: Bearer <token>`
+`GET` endpoints require a Bearer token: `Authorization: Bearer <token>`
+`POST` endpoint requires an API key: `x-api-key: <EVENTS_LOG_API_KEY>`
 
 ---
 
@@ -230,8 +245,8 @@ List event log entries with optional filters.
 | `eventName` | string | No | Filter by event. Values: `LOGGED_IN`, `ACCOUNTING_FILE_CREATED`, `SUPPLIER_UPDATED` |
 | `userId` | number | No | Filter by user ID |
 | `userEmail` | string | No | Filter by user email (exact match) |
-| `startDate` | ISO 8601 string | No | Filter records created on or after this date |
-| `endDate` | ISO 8601 string | No | Filter records created on or before this date |
+| `startDate` | ISO 8601 string | No | Filter records created on or after this date. Use full timestamp (e.g. `2026-06-01T00:00:00Z`) for precision |
+| `endDate` | ISO 8601 string | No | Filter records created on or before this date. A bare date like `2026-06-14` resolves to midnight UTC — pass `2026-06-14T23:59:59Z` to include the full day |
 | `page` | number | No | Page number (default: 1) |
 | `limit` | number | No | Results per page (default: 10) |
 | `orderBy` | string | No | Sort order: `ASC` or `DESC` (default: `DESC`) |
@@ -293,36 +308,26 @@ Create a new event log entry manually.
 ## Database Models
 
 ### User
-- id (UUID, Primary Key)
-- username (String, Unique)
+- id (INTEGER, Auto-increment Primary Key)
+- name (String, max 50 chars)
 - email (String, Unique)
 - password (String, Hashed)
 - role (Enum: 'user', 'admin')
-- totpSecret (String, Nullable)
-- isTotpEnabled (Boolean)
+- active (Boolean)
 
-### Invoice
-- id (UUID, Primary Key)
-- invoiceNumber (String, Unique)
-- customerId (UUID, Foreign Key)
-- issueDate (Date)
-- dueDate (Date)
-- totalAmount (Decimal)
-- status (Enum: 'draft', 'pending', 'paid', 'cancelled')
-
-### InvoiceDetail
-- id (UUID, Primary Key)
-- invoiceId (UUID, Foreign Key)
-- description (String)
-- quantity (Integer)
-- unitPrice (Decimal)
-- amount (Decimal)
+### EventLog (`events_log` table)
+- id (BIGINT, Auto-increment Primary Key)
+- entity (Enum: 'INCOMING_ORDER', 'APP', 'SUPPLIER')
+- event_name (Enum: 'LOGGED_IN', 'ACCOUNTING_FILE_CREATED', 'SUPPLIER_UPDATED')
+- user_id (INTEGER, Nullable, FK → users)
+- user_email (VARCHAR 100, Nullable)
+- outcome (VARCHAR: 'FAILED' | 'SUCCESS', Nullable)
+- created_at (TIMESTAMPTZ, auto-set on insert)
 
 ## Security Features
 
 - **Password Hashing**: bcrypt with salt rounds
 - **JWT Tokens**: Secure token-based authentication
-- **TOTP 2FA**: Time-based one-time passwords using otplib
 - **Role-based Access Control**: Admin and user roles
 - **CORS Protection**: Configurable origins
 - **Environment Variables**: Sensitive data in .env
@@ -351,11 +356,10 @@ import { config } from './config/env';
 Main dependencies:
 - **express**: Web framework
 - **sequelize**: ORM for database operations
-- **mysql2**: MySQL driver
+- **pg**: PostgreSQL driver
 - **jsonwebtoken**: JWT implementation
 - **bcrypt**: Password hashing
-- **otplib**: TOTP implementation
-- **winston**: Logging library
+- **pino**: High-performance structured logging
 - **cors**: CORS middleware
 - **dotenv**: Environment variable loader
 
