@@ -27,17 +27,20 @@ backend-nodejs-alma/
 │   │   ├── IncomingInvoice.js         # Incoming invoice model
 │   │   ├── IncomingInvoiceDetails.js  # Invoice line items model
 │   │   ├── Supplier.js                # Supplier model
+│   │   ├── Company.js                 # Company model
 │   │   └── EventLog.js                # Audit event log model
 │   ├── repositories/
 │   │   ├── userRepository.js          # User data access layer
 │   │   ├── invoiceRepository.js       # Invoice data access layer
 │   │   ├── supplierRepository.js      # Supplier data access layer
+│   │   ├── companyRepository.js       # Company data access layer
 │   │   └── eventLogRepository.js      # Event log data access layer
 │   ├── services/
 │   │   ├── authService.js             # Authentication service (JWT)
 │   │   ├── userService.js             # User business logic
 │   │   ├── invoiceService.js          # Invoice business logic
 │   │   ├── supplierService.js         # Supplier business logic
+│   │   ├── companyService.js          # Company business logic
 │   │   ├── eventLogService.js         # Event log business logic
 │   │   ├── emailService.js            # Email sending service
 │   │   └── emailTemplates.js          # Email template helpers
@@ -46,6 +49,7 @@ backend-nodejs-alma/
 │   │   ├── userController.js          # User CRUD endpoints
 │   │   ├── invoiceController.js       # Incoming order endpoints
 │   │   ├── supplierController.js      # Supplier endpoints
+│   │   ├── companyController.js       # Company endpoints
 │   │   └── eventLogController.js      # Event log endpoints
 │   ├── middlewares/
 │   │   ├── auth.js                    # JWT authentication & authorization
@@ -225,6 +229,117 @@ Partially update an existing supplier. Only include the fields to change.
   "success": true,
   "message": "Supplier updated successfully",
   "data": { "supplier": { ...supplier } }
+}
+```
+
+### Companies
+
+All company endpoints require a Bearer token: `Authorization: Bearer <token>`
+
+The `mailbox_config.clientSecret` value is redacted (`********`) in every response. It can only be set via `POST`/`PATCH`, never read back.
+
+---
+
+#### `GET /api/companies`
+List companies with optional filters.
+
+**Query params:**
+| Param | Type | Required | Description |
+|---|---|---|---|
+| `description` | string | No | Filter by partial, case-insensitive match on description |
+| `page` | number | No | Page number (default: 1) |
+| `limit` | number | No | Results per page (default: 10) |
+
+**Response:**
+```json
+{
+  "data": [ { ...company } ],
+  "total": 6
+}
+```
+
+---
+
+#### `GET /api/companies/:id`
+Get a single company by ID.
+
+**Path params:**
+| Param | Type | Description |
+|---|---|---|
+| `id` | number | Company ID |
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Company retrieved successfully",
+  "data": { "company": { ...company } }
+}
+```
+
+---
+
+#### `POST /api/companies`
+Create a new company.
+
+**Body (JSON):**
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `description` | string | Yes | Company name / description |
+| `accounts` | object | No | Free-form accounting codes, e.g. `{ "debit": "512510", "credit": "233595", "tax": "240804", "withholdings": "" }` |
+| `documentsnumber` | object | No | Free-form document numbering config, e.g. `{ "incomingInvoice": "10" }` |
+| `mailbox_config` | object | No | Mailbox reader credentials (see below). If provided, all sub-fields are required |
+| `onedrive_folder` | string | No | OneDrive folder identifier |
+
+**`mailbox_config` shape:**
+| Field | Type | Description |
+|---|---|---|
+| `client` | string | Either `microsoft` or `google` |
+| `clientId` | string | OAuth client ID |
+| `tenantId` | string | OAuth tenant ID |
+| `mailboxUser` | string | Mailbox address to read from |
+| `clientSecret` | string | OAuth client secret (write-only, redacted on read) |
+
+```json
+{
+  "description": "Example Company",
+  "mailbox_config": {
+    "client": "microsoft",
+    "clientId": "00000000-0000-0000-0000-000000000000",
+    "tenantId": "11111111-1111-1111-1111-111111111111",
+    "mailboxUser": "billing@example.com",
+    "clientSecret": "<client-secret>"
+  }
+}
+```
+
+**Response:** `201 Created`
+```json
+{
+  "success": true,
+  "message": "Company created successfully",
+  "data": { "company": { ...company } }
+}
+```
+
+---
+
+#### `PATCH /api/companies/:id`
+Partially update an existing company. Only include the fields to change.
+
+**Path params:**
+| Param | Type | Description |
+|---|---|---|
+| `id` | number | Company ID |
+
+**Body (JSON):** Any subset of the fields listed in `POST /api/companies`. Note that `mailbox_config` is replaced wholesale when supplied — include every sub-field, not just the one changing.
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Company updated successfully",
+  "data": { "company": { ...company } }
 }
 ```
 

@@ -3,6 +3,7 @@ import authController from '../controllers/authController.js';
 import userController from '../controllers/userController.js';
 import invoiceController from '../controllers/invoiceController.js';
 import supplierController from '../controllers/supplierController.js';
+import companyController from '../controllers/companyController.js';
 import eventLogController from '../controllers/eventLogController.js';
 import { authenticate, requireAdmin, requireApiKey } from '../middlewares/auth.js';
 
@@ -57,6 +58,15 @@ router.get('/suppliers', authenticate, supplierController.getAllSuppliers.bind(s
 router.get('/suppliers/:id', authenticate, supplierController.getSupplierById.bind(supplierController));
 router.post('/suppliers', authenticate, supplierController.createSupplier.bind(supplierController));
 router.patch('/suppliers/:id', authenticate, supplierController.updateSupplier.bind(supplierController));
+
+/**
+ * Company Routes
+ * @prefix /api/companies
+ */
+router.get('/companies', authenticate, companyController.getAllCompanies.bind(companyController));
+router.get('/companies/:id', authenticate, companyController.getCompanyById.bind(companyController));
+router.post('/companies', authenticate, companyController.createCompany.bind(companyController));
+router.patch('/companies/:id', authenticate, companyController.updateCompany.bind(companyController));
 
 /**
  * Event Log Routes
