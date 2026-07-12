@@ -15,6 +15,7 @@ class EventLogService {
         userEmail,
         startDate,
         endDate,
+        companyIds,
       } = filters;
 
       const offset = (page - 1) * limit;
@@ -24,14 +25,14 @@ class EventLogService {
         ? String(orderBy).toUpperCase()
         : 'DESC';
 
-      const where = {};
+      const { Op } = await import('sequelize');
+      const where = { company_id: { [Op.in]: companyIds } };
       if (entity) where.entity = entity;
       if (eventName) where.event_name = eventName;
       if (userId) where.user_id = userId;
       if (userEmail) where.user_email = userEmail;
 
       if (startDate || endDate) {
-        const { Op } = await import('sequelize');
         where.created_at = {};
         if (startDate) where.created_at[Op.gte] = new Date(startDate);
         if (endDate) where.created_at[Op.lte] = new Date(endDate);
@@ -61,10 +62,10 @@ class EventLogService {
     }
   }
 
-  async getById(id) {
+  async getById(id, companyIds) {
     try {
       const log = await eventLogRepository.findById(id);
-      if (!log) {
+      if (!log || !companyIds.includes(String(log.companyId))) {
         throw new Error('Event log not found');
       }
       logger.info(`Retrieved event log: ${log.id}`);
@@ -77,7 +78,7 @@ class EventLogService {
 
   async create(data) {
     try {
-      const { entity, eventName, userId, userEmail, outcome } = data;
+      const { entity, eventName, userId, userEmail, outcome, companyId } = data;
 
       if (!entity || !Object.values(ENTITY).includes(entity)) {
         throw new Error(`entity must be one of: ${Object.values(ENTITY).join(', ')}`);
@@ -88,8 +89,11 @@ class EventLogService {
       if (outcome !== undefined && outcome !== null && !Object.values(OUTCOME).includes(outcome)) {
         throw new Error(`outcome must be one of: ${Object.values(OUTCOME).join(', ')}`);
       }
+      if (eventName === EVENT_NAME.ACCOUNTING_FILE_CREATED && !companyId) {
+        throw new Error('companyId is required for ACCOUNTING_FILE_CREATED events');
+      }
 
-      const log = await eventLogRepository.create({ entity, eventName, userId, userEmail, outcome });
+      const log = await eventLogRepository.create({ entity, eventName, userId, userEmail, outcome, companyId });
       logger.info(`Created event log: ${log.id}`);
       return log.toJSON();
     } catch (error) {

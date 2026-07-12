@@ -14,7 +14,7 @@ class CompanyController {
         description: req.query.description,
       };
 
-      const result = await companyService.getAllCompanies(filters);
+      const result = await companyService.getAllCompanies(filters, req.user);
 
       return res.status(200).json(result);
     } catch (error) {
@@ -34,7 +34,7 @@ class CompanyController {
     try {
       const { id } = req.params;
 
-      const company = await companyService.getCompanyById(id);
+      const company = await companyService.getCompanyById(id, req.user);
 
       return res.status(200).json({
         success: true,

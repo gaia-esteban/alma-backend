@@ -65,6 +65,10 @@ class InvoiceRepository {
             model: IncomingInvoiceDetails,
             as: 'details',
           },
+          {
+            association: 'company',
+            attributes: ['id', 'description'],
+          },
         ],
       });
     } catch (error) {

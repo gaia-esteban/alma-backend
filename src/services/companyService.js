@@ -19,12 +19,15 @@ function sanitizeCompany(company) {
 }
 
 class CompanyService {
-  async getAllCompanies(filters = {}) {
+  async getAllCompanies(filters = {}, currentUser) {
     try {
       const { page = 1, limit = 10, description } = filters;
       const offset = (page - 1) * limit;
 
       const where = {};
+      if (currentUser.role !== 'admin') {
+        where.id = { [Op.in]: currentUser.company_access };
+      }
       if (description) where.description = { [Op.iLike]: `%${description}%` };
 
       const options = {
@@ -49,10 +52,10 @@ class CompanyService {
     }
   }
 
-  async getCompanyById(id) {
+  async getCompanyById(id, currentUser) {
     try {
       const company = await companyRepository.findById(id);
-      if (!company) {
+      if (!company || (currentUser.role !== 'admin' && !currentUser.company_access.includes(String(id)))) {
         throw new Error('Company not found');
       }
 

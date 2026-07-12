@@ -1,3 +1,4 @@
+import { Op } from 'sequelize';
 import invoiceRepository from '../repositories/invoiceRepository.js';
 import userRepository from '../repositories/userRepository.js';
 import logger from '../utils/logger.js';
@@ -62,7 +63,7 @@ class InvoiceService {
    */
   async getAllInvoices(filters = {}, currentUser) {
     try {
-      const { page = 1, limit = 10, orderBy = 'DESC', status } = filters;
+      const { page = 1, limit = 10, orderBy = 'DESC', status, companyIds } = filters;
       const offset = (page - 1) * limit;
 
       // Validate orderBy parameter
@@ -71,7 +72,7 @@ class InvoiceService {
         ? orderBy.toUpperCase()
         : 'DESC';
 
-      const where = {};
+      const where = { companyId: { [Op.in]: companyIds } };
       if (status) where.status = status;
 
       const options = {
@@ -79,6 +80,7 @@ class InvoiceService {
         limit: parseInt(limit),
         offset: parseInt(offset),
         orderBy: sortOrder,
+        include: [{ association: 'company', attributes: ['id', 'description'] }],
       };
 
       const invoices = await invoiceRepository.findAll(options);
@@ -102,10 +104,10 @@ class InvoiceService {
    * @param {Object} currentUser - Current authenticated user
    * @returns {Promise<Object>} Invoice data with details
    */
-  async getInvoiceById(id, currentUser) {
+  async getInvoiceById(id, companyIds, currentUser) {
     try {
       const invoice = await invoiceRepository.findByIdWithDetails(id);
-      if (!invoice) {
+      if (!invoice || !companyIds.includes(String(invoice.companyId))) {
         throw new Error('Invoice not found');
       }
 
@@ -250,16 +252,11 @@ class InvoiceService {
    * @param {Object} currentUser - Current authenticated user
    * @returns {Promise<Object>} Updated invoice
    */
-  async updateInvoiceStatus(id, status, currentUser) {
+  async updateInvoiceStatus(id, status, companyId, currentUser) {
     try {
       const invoice = await invoiceRepository.findById(id);
-      if (!invoice) {
+      if (!invoice || String(invoice.companyId) !== companyId) {
         throw new Error('Invoice not found');
-      }
-
-      // Check permissions
-      if (currentUser.role !== 'admin' && invoice.customerId !== currentUser.id) {
-        throw new Error('Unauthorized to update this invoice');
       }
 
       // Validate status transition
@@ -349,8 +346,15 @@ class InvoiceService {
    * @param {Object} currentUser - Current authenticated user
    * @returns {Promise<Object>} Export result
    */
-  async exportInvoices(invoices, consecutive) {
+  async exportInvoices(invoices, consecutive, companyId) {
     try {
+      const ids = invoices.map((invoice) => invoice.id).filter((id) => id !== undefined);
+      const found = await invoiceRepository.findAll({ where: { id: { [Op.in]: ids } } });
+      const mismatched = found.filter((invoice) => String(invoice.companyId) !== companyId);
+      if (found.length !== ids.length || mismatched.length > 0) {
+        throw new Error('One or more invoices do not belong to the specified company');
+      }
+
       const { default: mailboxReaderHelper } = await import(
         './helpers/mailboxReaderHelper.js'
       );

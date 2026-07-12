@@ -15,7 +15,9 @@ class SupplierRepository {
 
   async findById(id) {
     try {
-      return await Supplier.findByPk(id);
+      return await Supplier.findByPk(id, {
+        include: [{ association: 'company', attributes: ['id', 'description'] }],
+      });
     } catch (error) {
       logger.error({ err: error }, `Error finding supplier by ID ${id}`);
       throw error;
@@ -33,7 +35,10 @@ class SupplierRepository {
 
   async findAll(options = {}) {
     try {
-      return await Supplier.findAll(options);
+      return await Supplier.findAll({
+        include: [{ association: 'company', attributes: ['id', 'description'] }],
+        ...options,
+      });
     } catch (error) {
       logger.error({ err: error }, 'Error finding all suppliers');
       throw error;

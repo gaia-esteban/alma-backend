@@ -64,6 +64,15 @@ EventLog.init(
       allowNull: true,
       field: 'user_email',
     },
+    companyId: {
+      type: DataTypes.BIGINT,
+      allowNull: true,
+      field: 'company_id',
+      references: {
+        model: 'company',
+        key: 'id',
+      },
+    },
     outcome: {
       type: DataTypes.ENUM(...Object.values(OUTCOME)),
       allowNull: true,

@@ -11,7 +11,7 @@ class SupplierController {
       const filters = {
         page: req.query.page,
         limit: req.query.limit,
-        company_id: req.query.company_id,
+        companyIds: req.companyIds,
         is_active: req.query.is_active,
         identification: req.query.identification,
       };
@@ -36,7 +36,7 @@ class SupplierController {
     try {
       const { id } = req.params;
 
-      const supplier = await supplierService.getSupplierById(id);
+      const supplier = await supplierService.getSupplierById(id, req.companyIds);
 
       return res.status(200).json({
         success: true,
@@ -60,14 +60,14 @@ class SupplierController {
     try {
       const data = req.body;
 
-      if (!data.company_id || !data.identification) {
+      if (!data.identification) {
         return res.status(400).json({
           success: false,
-          message: 'company_id and identification are required',
+          message: 'identification is required',
         });
       }
 
-      const supplier = await supplierService.createSupplier(data);
+      const supplier = await supplierService.createSupplier(data, req.companyId);
 
       return res.status(201).json({
         success: true,
@@ -92,7 +92,7 @@ class SupplierController {
       const { id } = req.params;
       const updates = req.body;
 
-      const supplier = await supplierService.updateSupplier(id, updates);
+      const supplier = await supplierService.updateSupplier(id, updates, req.companyId);
 
       return res.status(200).json({
         success: true,
