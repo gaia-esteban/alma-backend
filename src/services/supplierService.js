@@ -1,14 +1,14 @@
+import { Op } from 'sequelize';
 import supplierRepository from '../repositories/supplierRepository.js';
 import logger from '../utils/logger.js';
 
 class SupplierService {
   async getAllSuppliers(filters = {}) {
     try {
-      const { page = 1, limit = 10, company_id, is_active, identification } = filters;
+      const { page = 1, limit = 10, companyIds, is_active, identification } = filters;
       const offset = (page - 1) * limit;
 
-      const where = {};
-      if (company_id) where.company_id = company_id;
+      const where = { company_id: { [Op.in]: companyIds } };
       if (is_active !== undefined) where.is_active = is_active === 'true' || is_active === true;
       if (identification) where.identification = identification;
 
@@ -34,10 +34,10 @@ class SupplierService {
     }
   }
 
-  async getSupplierById(id) {
+  async getSupplierById(id, companyIds) {
     try {
       const supplier = await supplierRepository.findById(id);
-      if (!supplier) {
+      if (!supplier || !companyIds.includes(String(supplier.company_id))) {
         throw new Error('Supplier not found');
       }
 
@@ -49,8 +49,10 @@ class SupplierService {
     }
   }
 
-  async createSupplier(data) {
+  async createSupplier(data, companyId) {
     try {
+      data.company_id = companyId;
+
       const existing = await supplierRepository.findByIdentificationAndCompany(
         data.identification,
         data.company_id
@@ -69,21 +71,21 @@ class SupplierService {
     }
   }
 
-  async updateSupplier(id, updates) {
+  async updateSupplier(id, updates, companyId) {
     try {
       const supplier = await supplierRepository.findById(id);
-      if (!supplier) {
+      if (!supplier || String(supplier.company_id) !== companyId) {
         throw new Error('Supplier not found');
       }
 
-      // If identification or company_id changes, check uniqueness
-      const newIdentification = updates.identification ?? supplier.identification;
-      const newCompanyId = updates.company_id ?? supplier.company_id;
+      // Suppliers cannot be moved to a different company through this endpoint
+      updates.company_id = supplier.company_id;
 
-      if (
-        newIdentification !== supplier.identification ||
-        newCompanyId !== supplier.company_id
-      ) {
+      // If identification changes, check uniqueness
+      const newIdentification = updates.identification ?? supplier.identification;
+      const newCompanyId = supplier.company_id;
+
+      if (newIdentification !== supplier.identification) {
         const conflict = await supplierRepository.findByIdentificationAndCompany(
           newIdentification,
           newCompanyId

@@ -14,6 +14,7 @@ class EventLogController {
         userEmail: req.query.userEmail,
         startDate: req.query.startDate,
         endDate: req.query.endDate,
+        companyIds: req.companyIds,
       };
 
       const result = await eventLogService.getAll(filters);
@@ -30,9 +31,9 @@ class EventLogController {
 
   async create(req, res) {
     try {
-      const { entity, eventName, userId, userEmail, outcome } = req.body;
+      const { entity, eventName, userId, userEmail, outcome, companyId } = req.body;
 
-      const log = await eventLogService.create({ entity, eventName, userId, userEmail, outcome });
+      const log = await eventLogService.create({ entity, eventName, userId, userEmail, outcome, companyId });
 
       return res.status(201).json({
         success: true,
@@ -52,7 +53,7 @@ class EventLogController {
     try {
       const { id } = req.params;
 
-      const log = await eventLogService.getById(id);
+      const log = await eventLogService.getById(id, req.companyIds);
 
       return res.status(200).json({
         success: true,

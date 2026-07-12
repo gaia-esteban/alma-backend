@@ -11,6 +11,15 @@ class User extends Model {
   }
 
   /**
+   * Check if user has access to a given company
+   * @param {number|string} companyId
+   * @returns {boolean}
+   */
+  hasCompanyAccess(companyId) {
+    return this.isAdmin() || this.company_access.includes(String(companyId));
+  }
+
+  /**
    * Convert user to JSON
    * @returns {Object}
    */
@@ -67,9 +76,17 @@ User.init(
       type: DataTypes.STRING,
       allowNull: true,
     },
-    company_id: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
+    company_access: {
+      type: DataTypes.ARRAY(DataTypes.STRING),
+      allowNull: false,
+      validate: {
+        notNull: { msg: 'company_access is required' },
+        isNonEmptyArray(value) {
+          if (!Array.isArray(value) || value.length === 0) {
+            throw new Error('company_access must contain at least one company id');
+          }
+        },
+      },
     },
   },
   {

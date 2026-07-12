@@ -1,5 +1,6 @@
 import { DataTypes, Model } from 'sequelize';
 import sequelize from '../config/database.js';
+import Company from './Company.js';
 
 class Supplier extends Model {
   toJSON() {
@@ -61,10 +62,6 @@ Supplier.init(
       type: DataTypes.DECIMAL,
       allowNull: true,
     },
-    withholding_account: {
-      type: DataTypes.STRING(50),
-      allowNull: true,
-    },
     is_active: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
@@ -78,5 +75,15 @@ Supplier.init(
     timestamps: true,
   }
 );
+
+Supplier.belongsTo(Company, {
+  foreignKey: 'company_id',
+  as: 'company',
+});
+
+Company.hasMany(Supplier, {
+  foreignKey: 'company_id',
+  as: 'suppliers',
+});
 
 export default Supplier;

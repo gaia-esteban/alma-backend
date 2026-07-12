@@ -48,7 +48,7 @@ class InvoiceController {
         page: req.query.page,
         limit: req.query.limit,
         status: req.query.status,
-        customerId: req.query.customerId,
+        companyIds: req.companyIds,
       };
       const currentUser = req.user;
 
@@ -73,7 +73,7 @@ class InvoiceController {
       const { id } = req.params;
       const currentUser = req.user;
 
-      const result = await invoiceService.getInvoiceById(id, currentUser);
+      const result = await invoiceService.getInvoiceById(id, req.companyIds, currentUser);
 
       return res.status(200).json(result);
     } catch (error) {
@@ -184,7 +184,7 @@ class InvoiceController {
         });
       }
 
-      const invoice = await invoiceService.updateInvoiceStatus(id, status, currentUser);
+      const invoice = await invoiceService.updateInvoiceStatus(id, status, req.companyId, currentUser);
 
       return res.status(200).json({
         success: true,
@@ -273,7 +273,7 @@ class InvoiceController {
         });
       }
 
-      const result = await invoiceService.exportInvoices(invoices, consecutive, currentUser);
+      const result = await invoiceService.exportInvoices(invoices, consecutive, req.companyId);
 
       return res.status(200).json({
         success: true,

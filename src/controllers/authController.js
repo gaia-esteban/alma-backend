@@ -11,7 +11,7 @@ class AuthController {
    */
   async register(req, res) {
     try {
-      const { name, email, role } = req.body;
+      const { name, email, role, company_access } = req.body;
 
       // Validate required fields
       if (!name || !email || !role) {
@@ -21,10 +21,18 @@ class AuthController {
         });
       }
 
+      if (!Array.isArray(company_access) || company_access.length === 0) {
+        return res.status(400).json({
+          success: false,
+          message: 'company_access is required and must be a non-empty array of company ids',
+        });
+      }
+
       const result = await authService.register({
         name,
         email,
         role,
+        company_access,
       });
 
       return res.status(201).json({

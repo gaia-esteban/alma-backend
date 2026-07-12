@@ -3,6 +3,7 @@ import { authenticator } from 'otplib';
 import QRCode from 'qrcode';
 import { config } from '../config/env.js';
 import userRepository from '../repositories/userRepository.js';
+import companyRepository from '../repositories/companyRepository.js';
 import logger from '../utils/logger.js';
 import emailService from './emailService.js';
 import eventLogService, { ENTITY, EVENT_NAME, OUTCOME } from './eventLogService.js';
@@ -25,18 +26,26 @@ class AuthService {
         throw new Error('Email already exists');
       }
 
+      // Validate every company_access id refers to an existing company
+      const { Op } = await import('sequelize');
+      const companyIds = userData.company_access.map((id) => String(id));
+      const existingCompanies = await companyRepository.count({
+        id: { [Op.in]: companyIds },
+      });
+      if (existingCompanies !== new Set(companyIds).size) {
+        throw new Error('company_access contains one or more unknown company ids');
+      }
+
       // Generate TOTP secret for 2FA
       const secret = authenticator.generateSecret();
-
-      console.log(secret)
 
       // Create user with active status and TOTP secret
       const user = await userRepository.create({
         ...userData,
+        company_access: companyIds,
         active: true,
         status: 'qrgen',
         otpkey: secret,
-        company_id: 1,
       });
 
       // Generate otpauth URL for QR code with simple data

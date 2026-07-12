@@ -1,5 +1,6 @@
 import { DataTypes, Model } from 'sequelize';
 import sequelize from '../config/database.js';
+import Company from './Company.js';
 
 class IncomingInvoice extends Model {
   /**
@@ -88,7 +89,7 @@ IncomingInvoice.init(
       allowNull: true,
       field: 'company_id',
       references: {
-        model: 'companies',
+        model: 'company',
         key: 'id',
       },
     },
@@ -150,5 +151,15 @@ IncomingInvoice.init(
     ],
   }
 );
+
+IncomingInvoice.belongsTo(Company, {
+  foreignKey: 'companyId',
+  as: 'company',
+});
+
+Company.hasMany(IncomingInvoice, {
+  foreignKey: 'companyId',
+  as: 'invoices',
+});
 
 export default IncomingInvoice;
