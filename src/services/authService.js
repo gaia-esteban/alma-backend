@@ -3,10 +3,10 @@ import { authenticator } from 'otplib';
 import QRCode from 'qrcode';
 import { config } from '../config/env.js';
 import userRepository from '../repositories/userRepository.js';
-import companyRepository from '../repositories/companyRepository.js';
 import logger from '../utils/logger.js';
 import emailService from './emailService.js';
 import eventLogService, { ENTITY, EVENT_NAME, OUTCOME } from './eventLogService.js';
+import { validateCompanyAccessIds } from '../utils/validateCompanyAccess.js';
 
 /**
  * Authentication Service
@@ -27,14 +27,7 @@ class AuthService {
       }
 
       // Validate every company_access id refers to an existing company
-      const { Op } = await import('sequelize');
-      const companyIds = userData.company_access.map((id) => String(id));
-      const existingCompanies = await companyRepository.count({
-        id: { [Op.in]: companyIds },
-      });
-      if (existingCompanies !== new Set(companyIds).size) {
-        throw new Error('company_access contains one or more unknown company ids');
-      }
+      const companyIds = await validateCompanyAccessIds(userData.company_access);
 
       // Generate TOTP secret for 2FA
       const secret = authenticator.generateSecret();
@@ -66,7 +59,7 @@ class AuthService {
       );
 
       logger.info(`Registration email sent to : ${userData.email}`);
-      logger.info(`User registered: ${user.username}`);
+      logger.info(`User registered: ${user.email}`);
 
       return {
         user: user.toJSON(),

@@ -1,4 +1,5 @@
 import userService from '../services/userService.js';
+import authService from '../services/authService.js';
 import logger from '../utils/logger.js';
 
 /**
@@ -62,19 +63,20 @@ class UserController {
       const userData = req.body;
 
       // Validate required fields
-      if (!userData.username || !userData.email || !userData.password) {
+      if (!userData.name || !userData.email || !Array.isArray(userData.company_access) || userData.company_access.length === 0) {
         return res.status(400).json({
           success: false,
-          message: 'Username, email, and password are required',
+          message: 'name, email, and a non-empty company_access array are required',
         });
       }
 
-      const user = await userService.createUser(userData);
+      const result = await authService.register(userData);
+      const { otpkey, ...safeUser } = result.user;
 
       return res.status(201).json({
         success: true,
         message: 'User created successfully',
-        data: { user },
+        data: { user: safeUser },
       });
     } catch (error) {
       logger.error({ err: error }, 'Create user error');
@@ -93,9 +95,8 @@ class UserController {
     try {
       const { id } = req.params;
       const updates = req.body;
-      const currentUser = req.user;
 
-      const user = await userService.updateUser(id, updates, currentUser);
+      const user = await userService.updateUser(id, updates);
 
       return res.status(200).json({
         success: true,

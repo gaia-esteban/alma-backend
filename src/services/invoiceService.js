@@ -343,10 +343,11 @@ class InvoiceService {
    * Export invoices
    * @param {Array<string>} invoiceIds - Array of invoice IDs to export
    * @param {string} consecutive - Consecutive identifier for the export
+   * @param {string} companyId - Company ID the invoices must belong to
    * @param {Object} currentUser - Current authenticated user
    * @returns {Promise<Object>} Export result
    */
-  async exportInvoices(invoices, consecutive, companyId) {
+  async exportInvoices(invoices, consecutive, companyId, currentUser) {
     try {
       const ids = invoices.map((invoice) => invoice.id).filter((id) => id !== undefined);
       const found = await invoiceRepository.findAll({ where: { id: { [Op.in]: ids } } });
@@ -360,7 +361,8 @@ class InvoiceService {
       );
       const response = await mailboxReaderHelper.callContaiExport(
         invoices,
-        consecutive
+        consecutive,
+        { userEmail: currentUser?.email, userName: currentUser?.name }
       );
 
       logger.info(

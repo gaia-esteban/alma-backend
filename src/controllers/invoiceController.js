@@ -273,7 +273,7 @@ class InvoiceController {
         });
       }
 
-      const result = await invoiceService.exportInvoices(invoices, consecutive, req.companyId);
+      const result = await invoiceService.exportInvoices(invoices, consecutive, req.companyId, currentUser);
 
       return res.status(200).json({
         success: true,
