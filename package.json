@@ -25,7 +25,7 @@
     "express": "^4.19.2",
     "jsonwebtoken": "^9.0.2",
     "nodemailer": "^7.0.12",
-    "notifier": "git+https://gaia-esteban@github.com/gaia-esteban/notifier.git#53a7df3caf800df437a5700a6099d1c31cd41348",
+    "notifier": "git+ssh://git@github.com/gaia-esteban/notifier.git#53a7df3caf800df437a5700a6099d1c31cd41348",
     "otplib": "^12.0.1",
     "pg": "^8.16.3",
     "pino": "^10.1.0",
