@@ -23,7 +23,7 @@ class AuthService {
       // Check if email already exists
       const existingEmail = await userRepository.findByEmail(userData.email);
       if (existingEmail) {
-        throw new Error('Email already exists');
+        throw new Error('El email ya está registrado');
       }
 
       // Validate every company_access id refers to an existing company
@@ -64,7 +64,7 @@ class AuthService {
       return {
         user: user.toJSON(),
         qrCode: qrCodeBase64,
-        message: 'Scan the QR code with your authenticator app to complete setup',
+        message: 'Escanea el código QR con tu aplicación de autenticación para completar la configuración',
       };
     } catch (error) {
       logger.error({ err: error }, 'Error registering user');
@@ -86,7 +86,7 @@ class AuthService {
       if (!user) {
         eventLogService.create({ entity: ENTITY.APP, eventName: EVENT_NAME.LOGGED_IN, outcome: OUTCOME.FAILED, userEmail: email })
           .catch(err => logger.error({ err }, 'Failed to log failed login attempt'));
-        throw new Error('Invalid credentials');
+        throw new Error('Credenciales inválidas');
       }
 
       // Verify TOTP code with simple configuration
@@ -99,7 +99,7 @@ class AuthService {
       if (!isValid) {
         eventLogService.create({ entity: ENTITY.APP, eventName: EVENT_NAME.LOGGED_IN, outcome: OUTCOME.FAILED, userId: user.id, userEmail: user.email })
           .catch(err => logger.error({ err }, 'Failed to log failed login attempt'));
-        throw new Error('Invalid OTP code');
+        throw new Error('Código OTP inválido');
       }
 
       // Generate token
@@ -148,7 +148,7 @@ class AuthService {
       return jwt.verify(token, config.jwt.secret);
     } catch (error) {
       logger.error({ err: error }, 'Error verifying token');
-      throw new Error('Invalid or expired token');
+      throw new Error('Token inválido o expirado');
     }
   }
 

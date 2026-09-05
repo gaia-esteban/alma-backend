@@ -23,7 +23,7 @@ class SupplierController {
       logger.error({ err: error }, 'Get all suppliers error');
       return res.status(400).json({
         success: false,
-        message: error.message || 'Failed to retrieve suppliers',
+        message: error.message || 'Error al obtener los proveedores',
       });
     }
   }
@@ -40,14 +40,14 @@ class SupplierController {
 
       return res.status(200).json({
         success: true,
-        message: 'Supplier retrieved successfully',
+        message: 'Proveedor obtenido correctamente',
         data: { supplier },
       });
     } catch (error) {
       logger.error({ err: error }, 'Get supplier by ID error');
       return res.status(404).json({
         success: false,
-        message: error.message || 'Supplier not found',
+        message: error.message || 'Proveedor no encontrado',
       });
     }
   }
@@ -63,7 +63,7 @@ class SupplierController {
       if (!data.identification) {
         return res.status(400).json({
           success: false,
-          message: 'identification is required',
+          message: 'La identificación es obligatoria',
         });
       }
 
@@ -71,14 +71,14 @@ class SupplierController {
 
       return res.status(201).json({
         success: true,
-        message: 'Supplier created successfully',
+        message: 'Proveedor creado correctamente',
         data: { supplier },
       });
     } catch (error) {
       logger.error({ err: error }, 'Create supplier error');
       return res.status(400).json({
         success: false,
-        message: error.message || 'Failed to create supplier',
+        message: error.message || 'Error al crear el proveedor',
       });
     }
   }
@@ -96,14 +96,14 @@ class SupplierController {
 
       return res.status(200).json({
         success: true,
-        message: 'Supplier updated successfully',
+        message: 'Proveedor actualizado correctamente',
         data: { supplier },
       });
     } catch (error) {
       logger.error({ err: error }, 'Update supplier error');
       return res.status(400).json({
         success: false,
-        message: error.message || 'Failed to update supplier',
+        message: error.message || 'Error al actualizar el proveedor',
       });
     }
   }

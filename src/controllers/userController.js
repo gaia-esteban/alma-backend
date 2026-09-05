@@ -25,7 +25,7 @@ class UserController {
       logger.error({ err: error }, 'Get all users error');
       return res.status(400).json({
         success: false,
-        message: error.message || 'Failed to retrieve users',
+        message: error.message || 'Error al obtener los usuarios',
       });
     }
   }
@@ -42,14 +42,14 @@ class UserController {
 
       return res.status(200).json({
         success: true,
-        message: 'User retrieved successfully',
+        message: 'Usuario obtenido correctamente',
         data: { user },
       });
     } catch (error) {
       logger.error({ err: error }, 'Get user by ID error');
       return res.status(404).json({
         success: false,
-        message: error.message || 'User not found',
+        message: error.message || 'Usuario no encontrado',
       });
     }
   }
@@ -66,7 +66,7 @@ class UserController {
       if (!userData.name || !userData.email || !Array.isArray(userData.company_access) || userData.company_access.length === 0) {
         return res.status(400).json({
           success: false,
-          message: 'name, email, and a non-empty company_access array are required',
+          message: 'El nombre, el email y un arreglo no vacío de compañías (company_access) son obligatorios',
         });
       }
 
@@ -75,14 +75,14 @@ class UserController {
 
       return res.status(201).json({
         success: true,
-        message: 'User created successfully',
+        message: 'Usuario creado correctamente',
         data: { user: safeUser },
       });
     } catch (error) {
       logger.error({ err: error }, 'Create user error');
       return res.status(400).json({
         success: false,
-        message: error.message || 'Failed to create user',
+        message: error.message || 'Error al crear el usuario',
       });
     }
   }
@@ -100,14 +100,14 @@ class UserController {
 
       return res.status(200).json({
         success: true,
-        message: 'User updated successfully',
+        message: 'Usuario actualizado correctamente',
         data: { user },
       });
     } catch (error) {
       logger.error({ err: error }, 'Update user error');
       return res.status(400).json({
         success: false,
-        message: error.message || 'Failed to update user',
+        message: error.message || 'Error al actualizar el usuario',
       });
     }
   }
@@ -125,14 +125,14 @@ class UserController {
 
       return res.status(200).json({
         success: true,
-        message: 'User deleted successfully',
+        message: 'Usuario eliminado correctamente',
         data: result,
       });
     } catch (error) {
       logger.error({ err: error }, 'Delete user error');
       return res.status(400).json({
         success: false,
-        message: error.message || 'Failed to delete user',
+        message: error.message || 'Error al eliminar el usuario',
       });
     }
   }
