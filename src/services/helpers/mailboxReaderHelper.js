@@ -1,7 +1,7 @@
 import config from '../../config/env.js';
 import logger from '../../utils/logger.js';
 
-async function callContaiExport(invoices, consecutive) {
+async function callContaiExport(invoices, consecutive, { userEmail, userName } = {}) {
   const { baseUrl, user, password } = config.mailboxReader;
 
   if (!baseUrl) {
@@ -17,7 +17,7 @@ async function callContaiExport(invoices, consecutive) {
       'Content-Type': 'application/json',
       Authorization: `Basic ${auth}`,
     },
-    body: JSON.stringify({ invoices, consecutive }),
+    body: JSON.stringify({ invoices, consecutive, userEmail, userName }),
   });
 
   if (!res.ok) {
