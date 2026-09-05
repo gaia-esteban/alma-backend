@@ -13,7 +13,7 @@ class UserRepository {
   async create(userData) {
     try {
       const user = await User.create(userData);
-      logger.info(`User created: ${user.username}`);
+      logger.info(`User created: ${user.email}`);
       return user;
     } catch (error) {
       logger.error({ err: error }, 'Error creating user');
@@ -31,20 +31,6 @@ class UserRepository {
       return await User.findByPk(id);
     } catch (error) {
       logger.error({ err: error }, `Error finding user by ID ${id}`);
-      throw error;
-    }
-  }
-
-  /**
-   * Find user by username
-   * @param {string} username - Username
-   * @returns {Promise<User|null>}
-   */
-  async findByUsername(username) {
-    try {
-      return await User.findOne({ where: { username } });
-    } catch (error) {
-      logger.error({ err: error }, `Error finding user by username ${username}`);
       throw error;
     }
   }
@@ -90,7 +76,7 @@ class UserRepository {
         return null;
       }
       await user.update(updates);
-      logger.info(`User updated: ${user.username}`);
+      logger.info(`User updated: ${user.email}`);
       return user;
     } catch (error) {
       logger.error({ err: error }, `Error updating user ${id}`);
@@ -110,7 +96,7 @@ class UserRepository {
         return false;
       }
       await user.destroy();
-      logger.info(`User deleted: ${user.username}`);
+      logger.info(`User deleted: ${user.email}`);
       return true;
     } catch (error) {
       logger.error({ err: error }, `Error deleting user ${id}`);

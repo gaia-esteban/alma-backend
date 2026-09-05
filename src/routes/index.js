@@ -36,7 +36,7 @@ router.post('/auth/login', authController.login.bind(authController));
 router.get('/users', authenticate, requireAdmin, userController.getAllUsers.bind(userController));
 router.get('/users/:id', authenticate, userController.getUserById.bind(userController));
 router.post('/users', authenticate, requireAdmin, userController.createUser.bind(userController));
-router.put('/users/:id', authenticate, userController.updateUser.bind(userController));
+router.put('/users/:id', authenticate, requireAdmin, userController.updateUser.bind(userController));
 router.delete('/users/:id', authenticate, requireAdmin, userController.deleteUser.bind(userController));
 
 /**
