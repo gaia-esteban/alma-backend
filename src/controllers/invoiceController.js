@@ -18,7 +18,7 @@ class InvoiceController {
       if (!invoice || !invoice.invoiceNumber || !invoice.customerId) {
         return res.status(400).json({
           success: false,
-          message: 'Invoice number and customer ID are required',
+          message: 'El número de factura y el ID de cliente son obligatorios',
         });
       }
 
@@ -26,14 +26,14 @@ class InvoiceController {
 
       return res.status(201).json({
         success: true,
-        message: 'Invoice created successfully',
+        message: 'Factura creada correctamente',
         data: { invoice: result },
       });
     } catch (error) {
       logger.error({ err: error }, 'Create invoice error');
       return res.status(400).json({
         success: false,
-        message: error.message || 'Failed to create invoice',
+        message: error.message || 'Error al crear la factura',
       });
     }
   }
@@ -59,7 +59,7 @@ class InvoiceController {
       logger.error({ err: error }, 'Get all invoices error');
       return res.status(400).json({
         success: false,
-        message: error.message || 'Failed to retrieve invoices',
+        message: error.message || 'Error al obtener las facturas',
       });
     }
   }
@@ -80,7 +80,7 @@ class InvoiceController {
       logger.error({ err: error }, 'Get invoice by ID error');
       return res.status(404).json({
         success: false,
-        message: error.message || 'Invoice not found',
+        message: error.message || 'Factura no encontrada',
       });
     }
   }
@@ -98,14 +98,14 @@ class InvoiceController {
 
       return res.status(200).json({
         success: true,
-        message: 'Invoice retrieved successfully',
+        message: 'Factura obtenida correctamente',
         data: { invoice },
       });
     } catch (error) {
       logger.error({ err: error }, 'Get invoice by number error');
       return res.status(404).json({
         success: false,
-        message: error.message || 'Invoice not found',
+        message: error.message || 'Factura no encontrada',
       });
     }
   }
@@ -129,14 +129,14 @@ class InvoiceController {
 
       return res.status(200).json({
         success: true,
-        message: 'Invoice updated successfully',
+        message: 'Factura actualizada correctamente',
         data: { invoice: result },
       });
     } catch (error) {
       logger.error({ err: error }, 'Update invoice error');
       return res.status(400).json({
         success: false,
-        message: error.message || 'Failed to update invoice',
+        message: error.message || 'Error al actualizar la factura',
       });
     }
   }
@@ -154,14 +154,14 @@ class InvoiceController {
 
       return res.status(200).json({
         success: true,
-        message: 'Invoice deleted successfully',
+        message: 'Factura eliminada correctamente',
         data: result,
       });
     } catch (error) {
       logger.error({ err: error }, 'Delete invoice error');
       return res.status(400).json({
         success: false,
-        message: error.message || 'Failed to delete invoice',
+        message: error.message || 'Error al eliminar la factura',
       });
     }
   }
@@ -180,7 +180,7 @@ class InvoiceController {
       if (!status) {
         return res.status(400).json({
           success: false,
-          message: 'Status is required',
+          message: 'El estado es obligatorio',
         });
       }
 
@@ -188,14 +188,14 @@ class InvoiceController {
 
       return res.status(200).json({
         success: true,
-        message: 'Invoice status updated successfully',
+        message: 'Estado de la factura actualizado correctamente',
         data: { invoice },
       });
     } catch (error) {
       logger.error({ err: error }, 'Update invoice status error');
       return res.status(400).json({
         success: false,
-        message: error.message || 'Failed to update invoice status',
+        message: error.message || 'Error al actualizar el estado de la factura',
       });
     }
   }
@@ -212,14 +212,14 @@ class InvoiceController {
 
       return res.status(200).json({
         success: true,
-        message: 'Invoice statistics retrieved successfully',
+        message: 'Estadísticas de facturas obtenidas correctamente',
         data: stats,
       });
     } catch (error) {
       logger.error({ err: error }, 'Get invoice statistics error');
       return res.status(400).json({
         success: false,
-        message: error.message || 'Failed to retrieve statistics',
+        message: error.message || 'Error al obtener las estadísticas',
       });
     }
   }
@@ -237,14 +237,14 @@ class InvoiceController {
 
       return res.status(200).json({
         success: true,
-        message: 'Customer invoices retrieved successfully',
+        message: 'Facturas del cliente obtenidas correctamente',
         data: { invoices },
       });
     } catch (error) {
       logger.error({ err: error }, 'Get customer invoices error');
       return res.status(400).json({
         success: false,
-        message: error.message || 'Failed to retrieve customer invoices',
+        message: error.message || 'Error al obtener las facturas del cliente',
       });
     }
   }
@@ -262,14 +262,14 @@ class InvoiceController {
       if (!invoices || !Array.isArray(invoices) || invoices.length === 0) {
         return res.status(400).json({
           success: false,
-          message: 'invoices array is required and must not be empty',
+          message: 'El arreglo de facturas es obligatorio y no puede estar vacío',
         });
       }
 
       if (consecutive !== undefined && typeof consecutive !== 'number') {
         return res.status(400).json({
           success: false,
-          message: 'consecutive must be a number',
+          message: 'El consecutivo debe ser un número',
         });
       }
 
@@ -277,14 +277,14 @@ class InvoiceController {
 
       return res.status(200).json({
         success: true,
-        message: 'Invoices exported successfully',
+        message: 'Facturas exportadas correctamente',
         data: result,
       });
     } catch (error) {
       logger.error({ err: error }, 'Export invoices error');
       return res.status(400).json({
         success: false,
-        message: error.message || 'Failed to export invoices',
+        message: error.message || 'Error al exportar las facturas',
       });
     }
   }

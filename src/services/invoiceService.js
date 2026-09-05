@@ -19,7 +19,7 @@ class InvoiceService {
       // Verify customer exists
       const customer = await userRepository.findById(invoiceData.customerId);
       if (!customer) {
-        throw new Error('Customer not found');
+        throw new Error('Cliente no encontrado');
       }
 
       // Check if invoice number already exists
@@ -27,7 +27,7 @@ class InvoiceService {
         invoiceData.invoiceNumber
       );
       if (existingInvoice) {
-        throw new Error('Invoice number already exists');
+        throw new Error('El número de factura ya existe');
       }
 
       // Calculate total amount from details
@@ -108,7 +108,7 @@ class InvoiceService {
     try {
       const invoice = await invoiceRepository.findByIdWithDetails(id);
       if (!invoice || !companyIds.includes(String(invoice.companyId))) {
-        throw new Error('Invoice not found');
+        throw new Error('Factura no encontrada');
       }
 
       logger.info(`Retrieved invoice: ${invoice.number} by user ${currentUser.username}`);
@@ -133,12 +133,12 @@ class InvoiceService {
     try {
       const invoice = await invoiceRepository.findByInvoiceNumber(invoiceNumber);
       if (!invoice) {
-        throw new Error('Invoice not found');
+        throw new Error('Factura no encontrada');
       }
 
       // Check permissions
       if (currentUser.role !== 'admin' && invoice.customerId !== currentUser.id) {
-        throw new Error('Unauthorized to view this invoice');
+        throw new Error('No tienes permiso para ver esta factura');
       }
 
       logger.info(`Retrieved invoice: ${invoice.invoiceNumber}`);
@@ -161,24 +161,24 @@ class InvoiceService {
     try {
       const invoice = await invoiceRepository.findById(id);
       if (!invoice) {
-        throw new Error('Invoice not found');
+        throw new Error('Factura no encontrada');
       }
 
       // Check permissions
       if (currentUser.role !== 'admin' && invoice.customerId !== currentUser.id) {
-        throw new Error('Unauthorized to update this invoice');
+        throw new Error('No tienes permiso para actualizar esta factura');
       }
 
       // Don't allow updating paid or cancelled invoices
       if (invoice.status === 'paid' || invoice.status === 'cancelled') {
-        throw new Error(`Cannot update ${invoice.status} invoice`);
+        throw new Error(`No se puede actualizar una factura en estado ${invoice.status}`);
       }
 
       // If customerId is being updated, verify new customer exists
       if (updates.customerId && updates.customerId !== invoice.customerId) {
         const customer = await userRepository.findById(updates.customerId);
         if (!customer) {
-          throw new Error('Customer not found');
+          throw new Error('Cliente no encontrado');
         }
       }
 
@@ -188,7 +188,7 @@ class InvoiceService {
           updates.invoiceNumber
         );
         if (existingInvoice) {
-          throw new Error('Invoice number already exists');
+          throw new Error('El número de factura ya existe');
         }
       }
 
@@ -220,24 +220,24 @@ class InvoiceService {
     try {
       const invoice = await invoiceRepository.findById(id);
       if (!invoice) {
-        throw new Error('Invoice not found');
+        throw new Error('Factura no encontrada');
       }
 
       // Only admins can delete invoices
       if (currentUser.role !== 'admin') {
-        throw new Error('Only admins can delete invoices');
+        throw new Error('Solo los administradores pueden eliminar facturas');
       }
 
       // Don't allow deleting paid invoices
       if (invoice.status === 'paid') {
-        throw new Error('Cannot delete paid invoice');
+        throw new Error('No se puede eliminar una factura pagada');
       }
 
       await invoiceRepository.delete(id);
       logger.info(`Invoice deleted: ${invoice.invoiceNumber} by user ${currentUser.username}`);
 
       return {
-        message: 'Invoice deleted successfully',
+        message: 'Factura eliminada correctamente',
       };
     } catch (error) {
       logger.error({ err: error }, `Error deleting invoice ${id}`);
@@ -256,13 +256,13 @@ class InvoiceService {
     try {
       const invoice = await invoiceRepository.findById(id);
       if (!invoice || String(invoice.companyId) !== companyId) {
-        throw new Error('Invoice not found');
+        throw new Error('Factura no encontrada');
       }
 
       // Validate status transition
       const validStatuses = ['Pendiente', 'Procesada', 'Fallida'];
       if (!validStatuses.includes(status)) {
-        throw new Error(`Invalid status. Must be one of: ${validStatuses.join(', ')}`);
+        throw new Error(`Estado inválido. Debe ser uno de: ${validStatuses.join(', ')}`);
       }
 
       const updatedInvoice = await invoiceRepository.update(id, { status });
@@ -326,7 +326,7 @@ class InvoiceService {
     try {
       // Check permissions
       if (currentUser.role !== 'admin' && customerId !== currentUser.id) {
-        throw new Error('Unauthorized to view these invoices');
+        throw new Error('No tienes permiso para ver estas facturas');
       }
 
       const invoices = await invoiceRepository.findByCustomerId(customerId);
@@ -353,7 +353,7 @@ class InvoiceService {
       const found = await invoiceRepository.findAll({ where: { id: { [Op.in]: ids } } });
       const mismatched = found.filter((invoice) => String(invoice.companyId) !== companyId);
       if (found.length !== ids.length || mismatched.length > 0) {
-        throw new Error('One or more invoices do not belong to the specified company');
+        throw new Error('Una o más facturas no pertenecen a la compañía especificada');
       }
 
       const { default: mailboxReaderHelper } = await import(

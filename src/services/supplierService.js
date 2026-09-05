@@ -38,7 +38,7 @@ class SupplierService {
     try {
       const supplier = await supplierRepository.findById(id);
       if (!supplier || !companyIds.includes(String(supplier.company_id))) {
-        throw new Error('Supplier not found');
+        throw new Error('Proveedor no encontrado');
       }
 
       logger.info(`Retrieved supplier: ${supplier.id}`);
@@ -58,7 +58,7 @@ class SupplierService {
         data.company_id
       );
       if (existing) {
-        throw new Error('A supplier with this identification already exists for this company');
+        throw new Error('Ya existe un proveedor con esta identificación para esta compañía');
       }
 
       const supplier = await supplierRepository.create(data);
@@ -75,7 +75,7 @@ class SupplierService {
     try {
       const supplier = await supplierRepository.findById(id);
       if (!supplier || String(supplier.company_id) !== companyId) {
-        throw new Error('Supplier not found');
+        throw new Error('Proveedor no encontrado');
       }
 
       // Suppliers cannot be moved to a different company through this endpoint
@@ -91,7 +91,7 @@ class SupplierService {
           newCompanyId
         );
         if (conflict && conflict.id !== supplier.id) {
-          throw new Error('A supplier with this identification already exists for this company');
+          throw new Error('Ya existe un proveedor con esta identificación para esta compañía');
         }
       }
 

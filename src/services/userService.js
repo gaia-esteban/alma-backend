@@ -61,7 +61,7 @@ class UserService {
     try {
       const user = await userRepository.findById(id);
       if (!user) {
-        throw new Error('User not found');
+        throw new Error('Usuario no encontrado');
       }
 
       logger.info(`Retrieved user: ${user.email}`);
@@ -82,14 +82,14 @@ class UserService {
     try {
       const user = await userRepository.findById(id);
       if (!user) {
-        throw new Error('User not found');
+        throw new Error('Usuario no encontrado');
       }
 
       // Check if new email is taken
       if (updates.email && updates.email !== user.email) {
         const existingEmail = await userRepository.findByEmail(updates.email);
         if (existingEmail) {
-          throw new Error('Email already exists');
+          throw new Error('El email ya está registrado');
         }
       }
 
@@ -118,19 +118,19 @@ class UserService {
     try {
       const user = await userRepository.findById(id);
       if (!user) {
-        throw new Error('User not found');
+        throw new Error('Usuario no encontrado');
       }
 
       // Prevent deleting yourself
       if (String(currentUser.id) === String(id)) {
-        throw new Error('You cannot delete your own account');
+        throw new Error('No puedes eliminar tu propia cuenta');
       }
 
       await userRepository.delete(id);
       logger.info(`User deleted: ${user.email}`);
 
       return {
-        message: 'User deleted successfully',
+        message: 'Usuario eliminado correctamente',
       };
     } catch (error) {
       logger.error({ err: error }, `Error deleting user ${id}`);

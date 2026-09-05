@@ -17,14 +17,14 @@ class AuthController {
       if (!name || !email || !role) {
         return res.status(400).json({
           success: false,
-          message: 'name, email, and role are required',
+          message: 'El nombre, el email y el rol son obligatorios',
         });
       }
 
       if (!Array.isArray(company_access) || company_access.length === 0) {
         return res.status(400).json({
           success: false,
-          message: 'company_access is required and must be a non-empty array of company ids',
+          message: 'company_access es obligatorio y debe ser un arreglo no vacío de IDs de compañía',
         });
       }
 
@@ -37,14 +37,14 @@ class AuthController {
 
       return res.status(201).json({
         success: true,
-        message: 'User registered successfully',
+        message: 'Usuario registrado correctamente',
         data: result,
       });
     } catch (error) {
       logger.error({ err: error }, 'Register error');
       return res.status(400).json({
         success: false,
-        message: error.message || 'Registration failed',
+        message: error.message || 'Error en el registro',
       });
     }
   }
@@ -61,7 +61,7 @@ class AuthController {
       if (!email || !otp) {
         return res.status(400).json({
           success: false,
-          message: 'Email and OTP are required',
+          message: 'El email y el código OTP son obligatorios',
         });
       }
 
@@ -69,14 +69,14 @@ class AuthController {
 
       return res.status(200).json({
         success: true,
-        message: 'Login successful',
+        message: 'Inicio de sesión exitoso',
         data: result,
       });
     } catch (error) {
       logger.error({ err: error }, 'Login error');
       return res.status(401).json({
         success: false,
-        message: error.message || 'Login failed',
+        message: error.message || 'Error al iniciar sesión',
       });
     }
   }

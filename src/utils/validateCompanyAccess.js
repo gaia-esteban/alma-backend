@@ -13,7 +13,7 @@ export async function validateCompanyAccessIds(companyAccess) {
     id: { [Op.in]: companyIds },
   });
   if (existingCompanies !== new Set(companyIds).size) {
-    throw new Error('company_access contains one or more unknown company ids');
+    throw new Error('company_access contiene uno o más ids de compañía desconocidos');
   }
   return companyIds;
 }
