@@ -48,6 +48,7 @@ class InvoiceController {
         page: req.query.page,
         limit: req.query.limit,
         status: req.query.status,
+        search: req.query.search,
         companyIds: req.companyIds,
       };
       const currentUser = req.user;
