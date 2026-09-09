@@ -1,4 +1,5 @@
 import { Op } from 'sequelize';
+import sequelize from '../config/database.js';
 import invoiceRepository from '../repositories/invoiceRepository.js';
 import userRepository from '../repositories/userRepository.js';
 import logger from '../utils/logger.js';
@@ -63,7 +64,7 @@ class InvoiceService {
    */
   async getAllInvoices(filters = {}, currentUser) {
     try {
-      const { page = 1, limit = 10, orderBy = 'DESC', status, companyIds } = filters;
+      const { page = 1, limit = 10, orderBy = 'DESC', status, companyIds, search } = filters;
       const offset = (page - 1) * limit;
 
       // Validate orderBy parameter
@@ -74,6 +75,14 @@ class InvoiceService {
 
       const where = { companyId: { [Op.in]: companyIds } };
       if (status) where.status = status;
+      if (search) {
+        const term = `%${search}%`;
+        where[Op.or] = [
+          { number: { [Op.iLike]: term } },
+          { supplierId: { [Op.iLike]: term } },
+          sequelize.where(sequelize.json('supplier.name'), { [Op.iLike]: term }),
+        ];
+      }
 
       const options = {
         where,
