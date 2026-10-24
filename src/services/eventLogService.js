@@ -26,7 +26,14 @@ class EventLogService {
         : 'DESC';
 
       const { Op } = await import('sequelize');
-      const where = { company_id: { [Op.in]: companyIds } };
+      // APP-entity events (e.g. LOGGED_IN) aren't tied to a single company — a login
+      // isn't scoped to the company the user happens to be viewing — so they're
+      // excluded from the company filter entirely and always included regardless
+      // of which company is selected. Other entities (e.g. INCOMING_ORDER) stay
+      // scoped to the caller's selected/accessible companies.
+      const where = {
+        [Op.or]: [{ entity: ENTITY.APP }, { company_id: { [Op.in]: companyIds } }],
+      };
       if (entity) where.entity = entity;
       if (eventName) where.event_name = eventName;
       if (userId) where.user_id = userId;
