@@ -5,12 +5,21 @@ import logger from '../utils/logger.js';
 class SupplierService {
   async getAllSuppliers(filters = {}) {
     try {
-      const { page = 1, limit = 10, companyIds, is_active, identification } = filters;
+      const { page = 1, limit = 10, companyIds, is_active, identification, search } = filters;
       const offset = (page - 1) * limit;
 
-      const where = { company_id: { [Op.in]: companyIds } };
+      // Base filters shared by the list query and the status-tab counts (everything except is_active)
+      const baseWhere = { company_id: { [Op.in]: companyIds } };
+      if (identification) baseWhere.identification = identification;
+      if (search) {
+        baseWhere[Op.or] = [
+          { identification: { [Op.iLike]: `%${search}%` } },
+          { description: { [Op.iLike]: `%${search}%` } },
+        ];
+      }
+
+      const where = { ...baseWhere };
       if (is_active !== undefined) where.is_active = is_active === 'true' || is_active === true;
-      if (identification) where.identification = identification;
 
       const options = {
         where,
@@ -19,14 +28,20 @@ class SupplierService {
         order: [['created_at', 'DESC']],
       };
 
-      const suppliers = await supplierRepository.findAll(options);
-      const total = await supplierRepository.count(where);
+      const [suppliers, total, allCount, activeCount, inactiveCount] = await Promise.all([
+        supplierRepository.findAll(options),
+        supplierRepository.count(where),
+        supplierRepository.count(baseWhere),
+        supplierRepository.count({ ...baseWhere, is_active: true }),
+        supplierRepository.count({ ...baseWhere, is_active: false }),
+      ]);
 
       logger.info(`Retrieved ${suppliers.length} suppliers`);
 
       return {
         data: suppliers.map(s => s.toJSON()),
         total,
+        counts: { all: allCount, active: activeCount, inactive: inactiveCount },
       };
     } catch (error) {
       logger.error({ err: error }, 'Error getting all suppliers');
