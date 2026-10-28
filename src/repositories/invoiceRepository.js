@@ -1,5 +1,6 @@
 import IncomingInvoice from '../models/IncomingInvoice.js';
 import IncomingInvoiceDetails from '../models/IncomingInvoiceDetails.js';
+import sequelize from '../config/database.js';
 import logger from '../utils/logger.js';
 
 /**
@@ -262,6 +263,70 @@ class InvoiceRepository {
       }, { grossValue: 0, taxValue: 0, totalValue: 0 });
     } catch (error) {
       logger.error({ err: error }, 'Error calculating total amounts');
+      throw error;
+    }
+  }
+
+  /**
+   * Aggregate invoice counts per company for a date range.
+   * Does a server-side GROUP BY instead of fetching rows, so result size
+   * never depends on how many invoices any single company has.
+   * @param {Array<string|number>} companyIds
+   * @param {string|Date} startDate
+   * @param {string|Date} endDate
+   * @returns {Promise<Array<{companyId: string, description: string|null, received: number, processed: number}>>}
+   */
+  async getStatsByCompany(companyIds, startDate, endDate) {
+    try {
+      return await sequelize.query(
+        `SELECT i.company_id AS "companyId",
+                c.description,
+                COUNT(*)::int AS received,
+                COUNT(*) FILTER (WHERE i.status = 'Procesada')::int AS processed
+         FROM ininvoicemaster i
+         LEFT JOIN company c ON c.id = i.company_id
+         WHERE i.company_id IN (:companyIds)
+           AND i.created_at BETWEEN :startDate AND :endDate
+         GROUP BY i.company_id, c.description`,
+        {
+          replacements: { companyIds, startDate, endDate },
+          type: sequelize.QueryTypes.SELECT,
+        }
+      );
+    } catch (error) {
+      logger.error({ err: error }, 'Error getting invoice stats by company');
+      throw error;
+    }
+  }
+
+  /**
+   * Aggregate invoice counts per time bucket (hour/day/week) for a date range.
+   * Same rationale as getStatsByCompany — aggregated in SQL so a volume spike
+   * in one company can't crowd out the others in a row-limited fetch.
+   * @param {Array<string|number>} companyIds
+   * @param {string|Date} startDate
+   * @param {string|Date} endDate
+   * @param {'hour'|'day'|'week'} granularity
+   * @returns {Promise<Array<{bucket: string, received: number, processed: number}>>}
+   */
+  async getStatsByBucket(companyIds, startDate, endDate, granularity) {
+    try {
+      return await sequelize.query(
+        `SELECT date_trunc(:granularity, i.created_at) AS bucket,
+                COUNT(*)::int AS received,
+                COUNT(*) FILTER (WHERE i.status = 'Procesada')::int AS processed
+         FROM ininvoicemaster i
+         WHERE i.company_id IN (:companyIds)
+           AND i.created_at BETWEEN :startDate AND :endDate
+         GROUP BY bucket
+         ORDER BY bucket ASC`,
+        {
+          replacements: { companyIds, startDate, endDate, granularity },
+          type: sequelize.QueryTypes.SELECT,
+        }
+      );
+    } catch (error) {
+      logger.error({ err: error }, 'Error getting invoice stats by bucket');
       throw error;
     }
   }

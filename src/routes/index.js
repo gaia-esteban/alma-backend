@@ -44,6 +44,7 @@ router.delete('/users/:id', authenticate, requireAdmin, userController.deleteUse
  * @prefix /api/incoming-orders
  */
 // GET operations
+router.get('/incoming-orders/stats', authenticate, requireCompanyIdParam, invoiceController.getInvoiceStats.bind(invoiceController));
 router.get('/incoming-orders', authenticate, requireCompanyIdParam, invoiceController.getAllInvoices.bind(invoiceController));
 router.get('/incoming-orders/:id', authenticate, requireCompanyIdParam, invoiceController.getInvoiceById.bind(invoiceController));
 // POST operations

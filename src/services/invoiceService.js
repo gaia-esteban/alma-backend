@@ -108,6 +108,53 @@ class InvoiceService {
   }
 
   /**
+   * Get invoice counts aggregated by company and time bucket for a date range.
+   * Used by the dashboard — aggregates in SQL so a high-volume company can't
+   * crowd out the others the way a row-limited list fetch would.
+   * @param {Object} filters - { companyIds, startDate, endDate, granularity }
+   * @returns {Promise<Object>} { totals, byCompany, byBucket }
+   */
+  async getInvoiceStats(filters = {}) {
+    try {
+      const { companyIds, startDate, endDate, granularity } = filters;
+
+      if (!startDate || !endDate) {
+        throw new Error('startDate y endDate son obligatorios');
+      }
+
+      const VALID_GRANULARITIES = ['hour', 'day', 'week'];
+      const safeGranularity = VALID_GRANULARITIES.includes(granularity) ? granularity : 'day';
+
+      const [byCompany, byBucket] = await Promise.all([
+        invoiceRepository.getStatsByCompany(companyIds, startDate, endDate),
+        invoiceRepository.getStatsByBucket(companyIds, startDate, endDate, safeGranularity),
+      ]);
+
+      const totals = byCompany.reduce(
+        (acc, row) => ({
+          received: acc.received + row.received,
+          processed: acc.processed + row.processed,
+        }),
+        { received: 0, processed: 0 }
+      );
+
+      return {
+        totals,
+        byCompany: byCompany.map((row) => ({
+          companyId: String(row.companyId),
+          description: row.description ?? 'Sin asignar',
+          received: row.received,
+          processed: row.processed,
+        })),
+        byBucket,
+      };
+    } catch (error) {
+      logger.error({ err: error }, 'Error getting invoice stats');
+      throw error;
+    }
+  }
+
+  /**
    * Get invoice by ID
    * @param {string} id - Invoice ID
    * @param {Object} currentUser - Current authenticated user

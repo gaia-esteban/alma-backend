@@ -14,6 +14,7 @@ class SupplierController {
         companyIds: req.companyIds,
         is_active: req.query.is_active,
         identification: req.query.identification,
+        search: req.query.search,
       };
 
       const result = await supplierService.getAllSuppliers(filters);

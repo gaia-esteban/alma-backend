@@ -66,6 +66,31 @@ class InvoiceController {
   }
 
   /**
+   * Get invoice counts aggregated by company and time bucket
+   * @route GET /api/incoming-orders/stats
+   */
+  async getInvoiceStats(req, res) {
+    try {
+      const filters = {
+        companyIds: req.companyIds,
+        startDate: req.query.startDate,
+        endDate: req.query.endDate,
+        granularity: req.query.granularity,
+      };
+
+      const result = await invoiceService.getInvoiceStats(filters);
+
+      return res.status(200).json({ success: true, data: result });
+    } catch (error) {
+      logger.error({ err: error }, 'Get invoice stats error');
+      return res.status(400).json({
+        success: false,
+        message: error.message || 'Error al obtener las estadísticas de facturas',
+      });
+    }
+  }
+
+  /**
    * Get invoice by ID
    * @route GET /api/incoming-orders/:id
    */
