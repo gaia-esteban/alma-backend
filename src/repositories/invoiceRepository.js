@@ -300,13 +300,13 @@ class InvoiceRepository {
   }
 
   /**
-   * Aggregate invoice counts per time bucket (hour/day/week) for a date range.
+   * Aggregate invoice counts per time bucket (hour/day/week/month) for a date range.
    * Same rationale as getStatsByCompany — aggregated in SQL so a volume spike
    * in one company can't crowd out the others in a row-limited fetch.
    * @param {Array<string|number>} companyIds
    * @param {string|Date} startDate
    * @param {string|Date} endDate
-   * @param {'hour'|'day'|'week'} granularity
+   * @param {'hour'|'day'|'week'|'month'} granularity
    * @returns {Promise<Array<{bucket: string, received: number, processed: number}>>}
    */
   async getStatsByBucket(companyIds, startDate, endDate, granularity) {
