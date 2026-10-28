@@ -122,7 +122,7 @@ class InvoiceService {
         throw new Error('startDate y endDate son obligatorios');
       }
 
-      const VALID_GRANULARITIES = ['hour', 'day', 'week'];
+      const VALID_GRANULARITIES = ['hour', 'day', 'week', 'month'];
       const safeGranularity = VALID_GRANULARITIES.includes(granularity) ? granularity : 'day';
 
       const [byCompany, byBucket] = await Promise.all([
