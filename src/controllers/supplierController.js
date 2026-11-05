@@ -108,6 +108,40 @@ class SupplierController {
       });
     }
   }
+
+  /**
+   * Sync supplier with Siigo (create it there if missing)
+   * @route POST /api/suppliers/:id/siigo-sync
+   */
+  async syncSupplierWithSiigo(req, res) {
+    try {
+      const { id } = req.params;
+
+      const result = await supplierService.syncSupplierWithSiigo(id, req.companyId, req.user);
+
+      if (result.status === 'failed') {
+        return res.status(422).json({
+          success: false,
+          message: result.message || 'No fue posible sincronizar el proveedor con Siigo',
+          data: { siigo: result },
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: result.status === 'created'
+          ? 'Proveedor creado en Siigo correctamente'
+          : 'El proveedor ya existe en Siigo',
+        data: { siigo: result },
+      });
+    } catch (error) {
+      logger.error({ err: error }, 'Sync supplier with Siigo error');
+      return res.status(400).json({
+        success: false,
+        message: error.message || 'Error al sincronizar el proveedor con Siigo',
+      });
+    }
+  }
 }
 
 export default new SupplierController();

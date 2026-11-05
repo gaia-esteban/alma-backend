@@ -60,6 +60,7 @@ router.get('/suppliers', authenticate, requireCompanyIdParam, supplierController
 router.get('/suppliers/:id', authenticate, requireCompanyIdParam, supplierController.getSupplierById.bind(supplierController));
 router.post('/suppliers', authenticate, requireSingleCompanyId, supplierController.createSupplier.bind(supplierController));
 router.patch('/suppliers/:id', authenticate, requireSingleCompanyId, supplierController.updateSupplier.bind(supplierController));
+router.post('/suppliers/:id/siigo-sync', authenticate, requireSingleCompanyId, supplierController.syncSupplierWithSiigo.bind(supplierController));
 
 /**
  * Company Routes
