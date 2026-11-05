@@ -236,7 +236,7 @@ Partially update an existing supplier. Only include the fields to change.
 
 All company endpoints require a Bearer token: `Authorization: Bearer <token>`
 
-The `mailbox_config.clientSecret` value is redacted (`********`) in every response. It can only be set via `POST`/`PATCH`, never read back.
+Mailbox secrets (`clientSecret`, `refreshToken` in each `mailbox_configs` entry) are redacted (`********`) in every response. They can only be set via `POST`/`PATCH`, never read back.
 
 ---
 
@@ -288,30 +288,46 @@ Create a new company.
 | `description` | string | Yes | Company name / description |
 | `accounts` | object | No | Free-form accounting codes, e.g. `{ "debit": "512510", "credit": "233595", "tax": "240804", "withholdings": "" }` |
 | `documentsnumber` | object | No | Free-form document numbering config, e.g. `{ "incomingInvoice": "10" }` |
-| `mailbox_config` | object | No | Mailbox reader credentials (see below). If provided, all sub-fields are required |
+| `mailbox_configs` | array | No | Inbound mailboxes the mailbox reader polls for this company — any number, default `[]` (see below) |
 | `onedrive_folder` | string | No | OneDrive folder identifier |
 
-**`mailbox_config` shape:**
-| Field | Type | Description |
-|---|---|---|
-| `client` | string | Either `microsoft` or `google` |
-| `clientId` | string | OAuth client ID |
-| `tenantId` | string | OAuth tenant ID |
-| `mailboxUser` | string | Mailbox address to read from |
-| `clientSecret` | string | OAuth client secret (write-only, redacted on read) |
+**`mailbox_configs` entry shape:** every mailbox in the array is polled with the same rules, and invoices from any of them are saved to this company. Required fields depend on `provider`:
+
+| Field | Type | `microsoft-graph` | `gmail` | Description |
+|---|---|---|---|---|
+| `provider` | string | required | required | `microsoft-graph` (Outlook / 365) or `gmail` |
+| `mailboxUser` | string | required | required | Mailbox address to read from. Must be unique within the company (case-insensitive) |
+| `clientId` | string | required | required | OAuth client ID |
+| `clientSecret` | string | required | required | OAuth client secret (write-only, redacted on read) |
+| `tenantId` | string | required | — | Azure tenant ID |
+| `refreshToken` | string | — | required | OAuth2 refresh token (write-only, redacted on read). See `alma-mailbox-reader/GMAIL-MAILBOX-SETUP.md` |
+| `enabled` | boolean | optional | optional | Default `true`. `false` keeps the credentials but stops polling that mailbox |
 
 ```json
 {
   "description": "Example Company",
-  "mailbox_config": {
-    "client": "microsoft",
-    "clientId": "00000000-0000-0000-0000-000000000000",
-    "tenantId": "11111111-1111-1111-1111-111111111111",
-    "mailboxUser": "billing@example.com",
-    "clientSecret": "<client-secret>"
-  }
+  "mailbox_configs": [
+    {
+      "provider": "microsoft-graph",
+      "clientId": "00000000-0000-0000-0000-000000000000",
+      "tenantId": "11111111-1111-1111-1111-111111111111",
+      "mailboxUser": "billing@example.com",
+      "clientSecret": "<client-secret>"
+    },
+    {
+      "provider": "gmail",
+      "clientId": "<google-client-id>",
+      "clientSecret": "<google-client-secret>",
+      "refreshToken": "<refresh-token>",
+      "mailboxUser": "proveedores@example.com"
+    }
+  ]
 }
 ```
+
+The old single-object `mailbox_config` field is no longer accepted (`400`). Migration: `scripts/migrate_mailbox_config_to_array.sql`.
+
+The mailbox reader loads mailbox config only at startup, so restart it after changing `mailbox_configs`.
 
 **Response:** `201 Created`
 ```json
@@ -332,7 +348,9 @@ Partially update an existing company. Only include the fields to change.
 |---|---|---|
 | `id` | number | Company ID |
 
-**Body (JSON):** Any subset of the fields listed in `POST /api/companies`. Note that `mailbox_config` is replaced wholesale when supplied — include every sub-field, not just the one changing.
+**Body (JSON):** Any subset of the fields listed in `POST /api/companies`. Note that `mailbox_configs` is replaced wholesale when supplied: send the full array, including the mailboxes you aren't changing. To add a mailbox, send the existing entries plus the new one; to remove one, leave it out.
+
+You can send back an entry exactly as `GET` returned it: where a secret is `********` (or left out), the stored secret of the existing mailbox with the same `mailboxUser` and `provider` is kept. A new mailbox, or one whose `provider` changed, must include real secrets; sending `********` for it returns `400`.
 
 **Response:**
 ```json

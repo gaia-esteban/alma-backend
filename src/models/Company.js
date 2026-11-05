@@ -1,27 +1,55 @@
 import { DataTypes, Model } from 'sequelize';
 import sequelize from '../config/database.js';
 
-export const MAILBOX_CLIENTS = Object.freeze(['microsoft', 'google']);
+// Inbound mailbox providers and their required fields. Mirrors the provider
+// validators in alma-mailbox-reader (src/services/providers/*Client.js isValid),
+// which is what actually consumes company.mailbox_configs — keep them in sync.
+export const MAILBOX_PROVIDERS = Object.freeze({
+  'microsoft-graph': Object.freeze(['tenantId', 'clientId', 'clientSecret', 'mailboxUser']),
+  gmail: Object.freeze(['clientId', 'clientSecret', 'refreshToken', 'mailboxUser']),
+});
 
-function validateMailboxConfig(value) {
-  if (value === null || value === undefined) {
-    return;
+// Credential fields that are write-only: redacted on read, preserved on PATCH
+// when the client sends the redaction mask back (see companyService).
+export const MAILBOX_SECRET_FIELDS = Object.freeze(['clientSecret', 'refreshToken']);
+
+function validateMailboxEntry(entry, index) {
+  const path = `mailbox_configs[${index}]`;
+
+  if (entry === null || typeof entry !== 'object' || Array.isArray(entry)) {
+    throw new Error(`${path} must be an object`);
   }
 
-  if (typeof value !== 'object' || Array.isArray(value)) {
-    throw new Error('mailbox_config must be an object');
+  const requiredFields = MAILBOX_PROVIDERS[entry.provider];
+  if (!requiredFields) {
+    throw new Error(`${path}.provider must be one of: ${Object.keys(MAILBOX_PROVIDERS).join(', ')}`);
   }
 
-  const requiredFields = ['client', 'clientId', 'tenantId', 'mailboxUser', 'clientSecret'];
   for (const field of requiredFields) {
-    if (typeof value[field] !== 'string' || !value[field].trim()) {
-      throw new Error(`mailbox_config.${field} is required and must be a non-empty string`);
+    if (typeof entry[field] !== 'string' || !entry[field].trim()) {
+      throw new Error(`${path}.${field} is required and must be a non-empty string`);
     }
   }
 
-  if (!MAILBOX_CLIENTS.includes(value.client)) {
-    throw new Error(`mailbox_config.client must be one of: ${MAILBOX_CLIENTS.join(', ')}`);
+  if (entry.enabled !== undefined && typeof entry.enabled !== 'boolean') {
+    throw new Error(`${path}.enabled must be a boolean`);
   }
+}
+
+function validateMailboxConfigs(value) {
+  if (!Array.isArray(value)) {
+    throw new Error('mailbox_configs must be an array');
+  }
+
+  const seen = new Set();
+  value.forEach((entry, index) => {
+    validateMailboxEntry(entry, index);
+    const key = entry.mailboxUser.trim().toLowerCase();
+    if (seen.has(key)) {
+      throw new Error(`mailbox_configs[${index}].mailboxUser "${entry.mailboxUser}" is duplicated`);
+    }
+    seen.add(key);
+  });
 }
 
 export const ACCOUNTING_SYSTEMS = Object.freeze({
@@ -161,11 +189,15 @@ Company.init(
       type: DataTypes.JSON,
       allowNull: true,
     },
-    mailbox_config: {
+    // Inbound mailboxes polled by alma-mailbox-reader; any number per company.
+    // Migration: scripts/migrate_mailbox_config_to_array.sql (replaces the old
+    // single-object mailbox_config column).
+    mailbox_configs: {
       type: DataTypes.JSONB,
-      allowNull: true,
+      allowNull: false,
+      defaultValue: [],
       validate: {
-        isValidMailboxConfig: validateMailboxConfig,
+        isValidMailboxConfigs: validateMailboxConfigs,
       },
     },
     onedrive_folder: {
