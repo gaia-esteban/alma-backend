@@ -1,5 +1,8 @@
 import { Op } from 'sequelize';
 import supplierRepository from '../repositories/supplierRepository.js';
+import companyRepository from '../repositories/companyRepository.js';
+import mailboxReaderHelper from './helpers/mailboxReaderHelper.js';
+import { ACCOUNTING_SYSTEMS } from '../models/Company.js';
 import logger from '../utils/logger.js';
 
 class SupplierService {
@@ -116,6 +119,39 @@ class SupplierService {
       return updated.toJSON();
     } catch (error) {
       logger.error({ err: error }, `Error updating supplier ${id}`);
+      throw error;
+    }
+  }
+
+  /**
+   * Make sure the supplier exists in Siigo (as a Supplier), creating it if needed.
+   * Only for companies whose accounting_system is siigo.
+   * @returns {Promise<{ status: 'exists'|'created'|'failed', siigoId?: string, message?: string, missing?: string[] }>}
+   */
+  async syncSupplierWithSiigo(id, companyId, currentUser) {
+    try {
+      const supplier = await supplierRepository.findById(id);
+      if (!supplier || String(supplier.company_id) !== companyId) {
+        throw new Error('Proveedor no encontrado');
+      }
+
+      const company = await companyRepository.findById(supplier.company_id);
+      if (company?.accounting_system !== ACCOUNTING_SYSTEMS.SIIGO) {
+        throw new Error('La compañía no usa Siigo como sistema contable');
+      }
+
+      const result = await mailboxReaderHelper.callSiigoSupplierSync({
+        companyId: String(supplier.company_id),
+        identification: supplier.identification,
+        description: supplier.description,
+        userEmail: currentUser?.email,
+        userName: currentUser?.name,
+      });
+
+      logger.info(`Supplier ${supplier.id} siigo sync: ${result.status}`);
+      return result;
+    } catch (error) {
+      logger.error({ err: error }, `Error syncing supplier ${id} with Siigo`);
       throw error;
     }
   }

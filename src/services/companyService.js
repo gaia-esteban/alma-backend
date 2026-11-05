@@ -5,17 +5,44 @@ import logger from '../utils/logger.js';
 const REDACTED_SECRET = '********';
 
 function sanitizeCompany(company) {
-  if (!company?.mailbox_config?.clientSecret) {
+  if (!company) {
     return company;
   }
 
-  return {
-    ...company,
-    mailbox_config: {
-      ...company.mailbox_config,
-      clientSecret: REDACTED_SECRET,
-    },
-  };
+  const sanitized = { ...company };
+
+  if (company.mailbox_config?.clientSecret) {
+    sanitized.mailbox_config = { ...company.mailbox_config, clientSecret: REDACTED_SECRET };
+  }
+
+  if (company.accounting_config?.accessKey) {
+    sanitized.accounting_config = { ...company.accounting_config, accessKey: REDACTED_SECRET };
+  }
+
+  return sanitized;
+}
+
+/**
+ * GET responses mask accessKey, so a client that edits a company and sends the
+ * config back unchanged would overwrite the real key with the mask. Swap the
+ * mask (or a missing key) for the stored value.
+ */
+function preserveAccessKey(updates, existing) {
+  const incoming = updates.accounting_config;
+  if (!incoming || typeof incoming !== 'object' || Array.isArray(incoming)) {
+    return updates;
+  }
+
+  if (incoming.accessKey !== undefined && incoming.accessKey !== REDACTED_SECRET) {
+    return updates;
+  }
+
+  const storedKey = existing?.accounting_config?.accessKey;
+  if (!storedKey) {
+    return updates;
+  }
+
+  return { ...updates, accounting_config: { ...incoming, accessKey: storedKey } };
 }
 
 class CompanyService {
@@ -81,7 +108,12 @@ class CompanyService {
 
   async updateCompany(id, updates) {
     try {
-      const updated = await companyRepository.update(id, updates);
+      const existing = await companyRepository.findById(id);
+      if (!existing) {
+        throw new Error('Company not found');
+      }
+
+      const updated = await companyRepository.update(id, preserveAccessKey(updates, existing.toJSON()));
       if (!updated) {
         throw new Error('Company not found');
       }
